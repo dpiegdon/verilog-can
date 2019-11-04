@@ -1,192 +1,43 @@
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-////  tb.v                                                        ////
-////                                                              ////
-////                                                              ////
-////  This file is part of the CAN Protocol Controller            ////
-////  http://www.opencores.org/projects/can/                      ////
-////                                                              ////
-////                                                              ////
-////  Author(s):                                                  ////
-////       Igor Mohor                                             ////
-////       igorm@opencores.org                                    ////
-////                                                              ////
-////                                                              ////
-////  All additional information is available in the README.txt   ////
-////  file.                                                       ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-//// Copyright (C) 2002, 2003 Authors                             ////
-////                                                              ////
-//// This source file may be used and distributed without         ////
-//// restriction provided that this copyright statement is not    ////
-//// removed from the file and that any derivative work contains  ////
-//// the original copyright notice and the associated disclaimer. ////
-////                                                              ////
-//// This source file is free software; you can redistribute it   ////
-//// and/or modify it under the terms of the GNU Lesser General   ////
-//// Public License as published by the Free Software Foundation; ////
-//// either version 2.1 of the License, or (at your option) any   ////
-//// later version.                                               ////
-////                                                              ////
-//// This source is distributed in the hope that it will be       ////
-//// useful, but WITHOUT ANY WARRANTY; without even the implied   ////
-//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      ////
-//// PURPOSE.  See the GNU Lesser General Public License for more ////
-//// details.                                                     ////
-////                                                              ////
-//// You should have received a copy of the GNU Lesser General    ////
-//// Public License along with this source; if not, download it   ////
-//// from http://www.opencores.org/lgpl.shtml                     ////
-////                                                              ////
-//// The CAN protocol is developed by Robert Bosch GmbH and       ////
-//// protected by patents. Anybody who wants to implement this    ////
-//// CAN IP core on silicon has to obtain a CAN protocol license  ////
-//// from Bosch.                                                  ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-//
-// CVS Revision History
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.41  2005/07/11 10:25:13  igorm
-// Fixing overrun problems.
-//
-// Revision 1.40  2004/03/18 17:39:17  igorm
-// I forgot to thange one signal name.
-//
-// Revision 1.39  2004/03/18 17:15:26  igorm
-// Signal bus_off_on added.
-//
-// Revision 1.38  2003/10/17 05:55:18  markom
-// mbist signals updated according to newest convention
-//
-// Revision 1.37  2003/09/30 20:53:58  mohor
-// Fixing the core to be Bosch VHDL Reference compatible.
-//
-// Revision 1.36  2003/08/20 10:03:20  mohor
-// Artisan RAMs added.
-//
-// Revision 1.35  2003/06/17 15:14:48  mohor
-// cs_can_i is used only when WISHBONE interface is not used.
-//
-// Revision 1.34  2003/03/26 11:25:39  mohor
-// CAN inturrupt is active low.
-//
-// Revision 1.33  2003/03/14 19:37:30  mohor
-// ALE changes on negedge of clk.
-//
-// Revision 1.32  2003/03/12 05:57:36  mohor
-// Bidirectional port_0_i changed to port_0_io.
-// input cs_can changed to cs_can_i.
-//
-// Revision 1.31  2003/03/12 04:40:00  mohor
-// rd_i and wr_i are active high signals. If 8051 is connected, these two signals
-// need to be negated one level higher.
-//
-// Revision 1.30  2003/03/12 04:16:40  mohor
-// 8051 interface added (besides WISHBONE interface). Selection is made in
-// can_defines.v file.
-//
-// Revision 1.29  2003/03/05 15:33:37  mohor
-// tx_o is now tristated signal. tx_oen and tx_o combined together.
-//
-// Revision 1.28  2003/03/05 15:00:49  mohor
-// Top level signal names changed.
-//
-// Revision 1.27  2003/03/01 22:48:26  mohor
-// Actel APA ram supported.
-//
-// Revision 1.26  2003/02/19 14:43:17  mohor
-// CAN core finished. Host interface added. Registers finished.
-// Synchronization to the wishbone finished.
-//
-// Revision 1.25  2003/02/18 00:19:39  mohor
-// Temporary backup version (still fully operable).
-//
-// Revision 1.24  2003/02/14 20:16:53  mohor
-// Several registers added. Not finished, yet.
-//
-// Revision 1.23  2003/02/12 14:28:30  mohor
-// Errors monitoring improved. arbitration_lost improved.
-//
-// Revision 1.22  2003/02/11 00:57:19  mohor
-// Wishbone interface added.
-//
-// Revision 1.21  2003/02/09 18:40:23  mohor
-// Overload fixed. Hard synchronization also enabled at the last bit of
-// interframe.
-//
-// Revision 1.20  2003/02/09 02:24:11  mohor
-// Bosch license warning added. Error counters finished. Overload frames
-// still need to be fixed.
-//
-// Revision 1.19  2003/02/04 17:24:33  mohor
-// Backup.
-//
-// Revision 1.18  2003/02/04 14:34:45  mohor
-// *** empty log message ***
-//
-// Revision 1.17  2003/01/31 01:13:31  mohor
-// backup.
-//
-// Revision 1.16  2003/01/16 13:36:14  mohor
-// Form error supported. When receiving messages, last bit of the end-of-frame
-// does not generate form error. Receiver goes to the idle mode one bit sooner.
-// (CAN specification ver 2.0, part B, page 57).
-//
-// Revision 1.15  2003/01/15 21:05:06  mohor
-// CRC checking fixed (when bitstuff occurs at the end of a CRC sequence).
-//
-// Revision 1.14  2003/01/15 14:40:16  mohor
-// RX state machine fixed to receive "remote request" frames correctly. No
-// data bytes are written to fifo when such frames are received.
-//
-// Revision 1.13  2003/01/15 13:16:42  mohor
-// When a frame with "remote request" is received, no data is stored to
-// fifo, just the frame information (identifier, ...). Data length that
-// is stored is the received data length and not the actual data length
-// that is stored to fifo.
-//
-// Revision 1.12  2003/01/14 17:25:03  mohor
-// Addresses corrected to decimal values (previously hex).
-//
-// Revision 1.11  2003/01/14 12:19:29  mohor
-// rx_fifo is now working.
-//
-// Revision 1.10  2003/01/10 17:51:28  mohor
-// Temporary version (backup).
-//
-// Revision 1.9  2003/01/09 21:54:39  mohor
-// rx fifo added. Not 100 % verified, yet.
-//
-// Revision 1.8  2003/01/08 02:09:43  mohor
-// Acceptance filter added.
-//
-// Revision 1.7  2002/12/28 04:13:53  mohor
-// Backup version.
-//
-// Revision 1.6  2002/12/27 00:12:48  mohor
-// Header changed, testbench improved to send a frame (crc still missing).
-//
-// Revision 1.5  2002/12/26 16:00:29  mohor
-// Testbench define file added. Clock divider register added.
-//
-// Revision 1.4  2002/12/26 01:33:01  mohor
-// Tripple sampling supported.
-//
-// Revision 1.3  2002/12/25 23:44:12  mohor
-// Commented lines removed.
-//
-// Revision 1.2  2002/12/25 14:16:54  mohor
-// Synchronization working.
-//
-// Revision 1.1.1.1  2002/12/20 16:39:21  mohor
-// Initial
-//
-//
-//
+/* vim: colorcolumn=80
+ *
+ * This file is part of a verilog CAN controller that is SJA1000 compatible.
+ *
+ * Authors:
+ *   * Igor Mohor <igorm@opencores.org>
+ *       Author of the original version at
+ *       http://www.opencores.org/projects/can/
+ *       (which has been unmaintained since about 2009)
+ *
+ *   * David Piegdon <dgit@piegdon.de>
+ *       Picked up project for cleanup and bugfixes in 2019
+ *
+ * Any additional information is available in the LICENSE file.
+ *
+ * Copyright (C) 2002, 2003, 2004, 2019 Authors
+ *
+ * This source file may be used and distributed without restriction provided
+ * that this copyright statement is not removed from the file and that any
+ * derivative work contains the original copyright notice and the associated
+ * disclaimer.
+ *
+ * This source file is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation; either version 2.1 of the License, or (at your
+ * option) any later version.
+ *
+ * This source is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this source; if not, download it from
+ * http://www.opencores.org/lgpl.shtml
+ *
+ * The CAN protocol is developed by Robert Bosch GmbH and protected by patents.
+ * Anybody who wants to implement this CAN IP core on silicon has to obtain
+ * a CAN protocol license from Bosch.
+ */
 
 // synopsys translate_on
 `include "can_defines.v"

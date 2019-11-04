@@ -1,145 +1,43 @@
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-////  can_fifo.v                                                  ////
-////                                                              ////
-////                                                              ////
-////  This file is part of the CAN Protocol Controller            ////
-////  http://www.opencores.org/projects/can/                      ////
-////                                                              ////
-////                                                              ////
-////  Author(s):                                                  ////
-////       Igor Mohor                                             ////
-////       igorm@opencores.org                                    ////
-////                                                              ////
-////                                                              ////
-////  All additional information is available in the README.txt   ////
-////  file.                                                       ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-//// Copyright (C) 2002, 2003, 2004 Authors                       ////
-////                                                              ////
-//// This source file may be used and distributed without         ////
-//// restriction provided that this copyright statement is not    ////
-//// removed from the file and that any derivative work contains  ////
-//// the original copyright notice and the associated disclaimer. ////
-////                                                              ////
-//// This source file is free software; you can redistribute it   ////
-//// and/or modify it under the terms of the GNU Lesser General   ////
-//// Public License as published by the Free Software Foundation; ////
-//// either version 2.1 of the License, or (at your option) any   ////
-//// later version.                                               ////
-////                                                              ////
-//// This source is distributed in the hope that it will be       ////
-//// useful, but WITHOUT ANY WARRANTY; without even the implied   ////
-//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      ////
-//// PURPOSE.  See the GNU Lesser General Public License for more ////
-//// details.                                                     ////
-////                                                              ////
-//// You should have received a copy of the GNU Lesser General    ////
-//// Public License along with this source; if not, download it   ////
-//// from http://www.opencores.org/lgpl.shtml                     ////
-////                                                              ////
-//// The CAN protocol is developed by Robert Bosch GmbH and       ////
-//// protected by patents. Anybody who wants to implement this    ////
-//// CAN IP core on silicon has to obtain a CAN protocol license  ////
-//// from Bosch.                                                  ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-//
-// CVS Revision History
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.27  2004/11/18 12:39:34  igorm
-// Fixes for compatibility after the SW reset.
-//
-// Revision 1.26  2004/02/08 14:30:57  mohor
-// Header changed.
-//
-// Revision 1.25  2003/10/23 16:52:17  mohor
-// Active high/low problem when Altera devices are used. Bug fixed by
-// Rojhalat Ibrahim.
-//
-// Revision 1.24  2003/10/17 05:55:20  markom
-// mbist signals updated according to newest convention
-//
-// Revision 1.23  2003/09/05 12:46:41  mohor
-// ALTERA_RAM supported.
-//
-// Revision 1.22  2003/08/20 09:59:16  mohor
-// Artisan RAM fixed (when not using BIST).
-//
-// Revision 1.21  2003/08/14 16:04:52  simons
-// Artisan ram instances added.
-//
-// Revision 1.20  2003/07/16 14:00:45  mohor
-// Fixed according to the linter.
-//
-// Revision 1.19  2003/07/03 09:30:44  mohor
-// PCI_BIST replaced with CAN_BIST.
-//
-// Revision 1.18  2003/06/27 22:14:23  simons
-// Overrun fifo implemented with FFs, because it is not possible to create such a memory.
-//
-// Revision 1.17  2003/06/27 20:56:15  simons
-// Virtual silicon ram instances added.
-//
-// Revision 1.16  2003/06/18 23:03:44  mohor
-// Typo fixed.
-//
-// Revision 1.15  2003/06/11 09:37:05  mohor
-// overrun and length_info fifos are initialized at the end of reset.
-//
-// Revision 1.14  2003/03/05 15:02:30  mohor
-// Xilinx RAM added.
-//
-// Revision 1.13  2003/03/01 22:53:33  mohor
-// Actel APA ram supported.
-//
-// Revision 1.12  2003/02/19 14:44:03  mohor
-// CAN core finished. Host interface added. Registers finished.
-// Synchronization to the wishbone finished.
-//
-// Revision 1.11  2003/02/14 20:17:01  mohor
-// Several registers added. Not finished, yet.
-//
-// Revision 1.10  2003/02/11 00:56:06  mohor
-// Wishbone interface added.
-//
-// Revision 1.9  2003/02/09 02:24:33  mohor
-// Bosch license warning added. Error counters finished. Overload frames
-// still need to be fixed.
-//
-// Revision 1.8  2003/01/31 01:13:38  mohor
-// backup.
-//
-// Revision 1.7  2003/01/17 17:44:31  mohor
-// Fifo corrected to be synthesizable.
-//
-// Revision 1.6  2003/01/15 13:16:47  mohor
-// When a frame with "remote request" is received, no data is stored
-// to fifo, just the frame information (identifier, ...). Data length
-// that is stored is the received data length and not the actual data
-// length that is stored to fifo.
-//
-// Revision 1.5  2003/01/14 17:25:09  mohor
-// Addresses corrected to decimal values (previously hex).
-//
-// Revision 1.4  2003/01/14 12:19:35  mohor
-// rx_fifo is now working.
-//
-// Revision 1.3  2003/01/09 21:54:45  mohor
-// rx fifo added. Not 100 % verified, yet.
-//
-// Revision 1.2  2003/01/09 14:46:58  mohor
-// Temporary files (backup).
-//
-// Revision 1.1  2003/01/08 02:10:55  mohor
-// Acceptance filter added.
-//
-//
-//
-//
+/* vim: colorcolumn=80
+ *
+ * This file is part of a verilog CAN controller that is SJA1000 compatible.
+ *
+ * Authors:
+ *   * Igor Mohor <igorm@opencores.org>
+ *       Author of the original version at
+ *       http://www.opencores.org/projects/can/
+ *       (which has been unmaintained since about 2009)
+ *
+ *   * David Piegdon <dgit@piegdon.de>
+ *       Picked up project for cleanup and bugfixes in 2019
+ *
+ * Any additional information is available in the LICENSE file.
+ *
+ * Copyright (C) 2002, 2003, 2004, 2019 Authors
+ *
+ * This source file may be used and distributed without restriction provided
+ * that this copyright statement is not removed from the file and that any
+ * derivative work contains the original copyright notice and the associated
+ * disclaimer.
+ *
+ * This source file is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation; either version 2.1 of the License, or (at your
+ * option) any later version.
+ *
+ * This source is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this source; if not, download it from
+ * http://www.opencores.org/lgpl.shtml
+ *
+ * The CAN protocol is developed by Robert Bosch GmbH and protected by patents.
+ * Anybody who wants to implement this CAN IP core on silicon has to obtain
+ * a CAN protocol license from Bosch.
+ */
 
 // synopsys translate_on
 `include "can_defines.v"
