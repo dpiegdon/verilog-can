@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 ////                                                              ////
-////  can_testbench_defines.v                                     ////
+////  tb_defines.v                                                ////
 ////                                                              ////
 ////                                                              ////
 ////  This file is part of the CAN Protocol Controller            ////
@@ -82,6 +82,8 @@
 //
 //
 
+`timescale 1ns/10ps
+
 /* Mode register */
 `define CAN_MODE_RESET                  1'h1    /* Reset mode */
 
@@ -100,5 +102,3 @@
 `define CAN_TIMING1_TSEG1               4'hf    /* TSEG1 segment (value+1) */
 `define CAN_TIMING1_TSEG2               3'h2    /* TSEG2 segment (value+1) */
 `define CAN_TIMING1_SAM                 1'h0    /* Triple sampling */
-
-

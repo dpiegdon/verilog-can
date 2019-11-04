@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 ////                                                              ////
-////  can_testbench.v                                             ////
+////  tb.v                                                        ////
 ////                                                              ////
 ////                                                              ////
 ////  This file is part of the CAN Protocol Controller            ////
@@ -188,8 +188,6 @@
 //
 //
 
-// synopsys translate_off
-`include "timescale.v"
 // synopsys translate_on
 `include "can_defines.v"
 `include "can_testbench_defines.v"
