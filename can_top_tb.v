@@ -39,9 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
-// synopsys translate_on
-`include "can_defines.v"
-`include "can_testbench_defines.v"
+`include "can_top_defines.v"
+`include "can_top_tb_defines.v"
 
 module can_testbench();
 

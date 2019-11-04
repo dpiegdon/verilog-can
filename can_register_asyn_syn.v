@@ -39,9 +39,6 @@
  * a CAN protocol license from Bosch.
  */
 
-// synopsys translate_on
-
-
 module can_register_asyn_syn
 ( data_in,
   data_out,

@@ -39,8 +39,6 @@
  * a CAN protocol license from Bosch.
  */
 
-// synopsys translate_on
-
 module can_crc (clk, data, enable, initialize, crc);
 
 

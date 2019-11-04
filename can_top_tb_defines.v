@@ -38,7 +38,7 @@
  * Anybody who wants to implement this CAN IP core on silicon has to obtain
  * a CAN protocol license from Bosch.
  */
-
+ 
 `timescale 1ns/10ps
 
 /* Mode register */
