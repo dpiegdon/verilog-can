@@ -40,6 +40,10 @@
  */
 
 `include "can_top_defines.v"
+`include "can_crc.v"
+`include "can_acf.v"
+`include "can_fifo.v"
+`include "can_ibo.v"
 
 module can_bsp
 ( 

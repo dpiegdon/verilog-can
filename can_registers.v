@@ -40,6 +40,9 @@
  */
 
 `include "can_top_defines.v"
+`include "can_register_asyn_syn.v"
+`include "can_register_asyn.v"
+`include "can_register.v"
 
 module can_registers
 ( 

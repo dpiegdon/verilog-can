@@ -40,6 +40,9 @@
  */
 
 `include "can_top_defines.v"
+`include "can_registers.v"
+`include "can_btl.v"
+`include "can_bsp.v"
 
 module can_top
 ( 

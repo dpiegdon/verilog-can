@@ -400,7 +400,7 @@ begin
 */
   #1000;
   $display("CAN Testbench finished !");
-  $stop;
+  $finish;
 end
 
 
