@@ -39,30 +39,18 @@
  * a CAN protocol license from Bosch.
  */
 
-module can_register
-( data_in,
-  data_out,
-  we,
-  clk
-);
+module can_register(
+	input wire [WIDTH-1:0] data_in,
+	output reg [WIDTH-1:0] data_out,
+	input wire we,
+	input wire clk);
 
-parameter WIDTH = 8; // default parameter of the register width
+	parameter WIDTH = 8;
 
-input [WIDTH-1:0] data_in;
-input             we;
-input             clk;
-
-output [WIDTH-1:0] data_out;
-reg    [WIDTH-1:0] data_out;
-
-
-
-always @ (posedge clk)
-begin
-  if (we)                        // write
-    data_out<=#1 data_in;
-end
-
-
+	always @(posedge clk) begin
+		if(we) begin
+			data_out <=#1 data_in;
+		end
+	end
 
 endmodule

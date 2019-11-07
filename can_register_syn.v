@@ -39,35 +39,23 @@
  * a CAN protocol license from Bosch.
  */
 
-module can_register_syn
-( data_in,
-  data_out,
-  we,
-  clk,
-  rst_sync
-);
+module can_register_syn(
+	input wire [WIDTH-1:0] data_in,
+	output reg [WIDTH-1:0] data_out,
+	input wire we,
+	input wire clk,
+	input wire rst_sync);
 
-parameter WIDTH = 8; // default parameter of the register width
-parameter RESET_VALUE = 0;
+	parameter WIDTH = 8;
+	parameter RESET_VALUE = 0;
 
-input [WIDTH-1:0] data_in;
-input             we;
-input             clk;
-input             rst_sync;
-
-output [WIDTH-1:0] data_out;
-reg    [WIDTH-1:0] data_out;
-
-
-
-always @ (posedge clk)
-begin
-  if (rst_sync)                       // synchronous reset
-    data_out<=#1 RESET_VALUE;
-  else if (we)                        // write
-    data_out<=#1 data_in;
-end
-
-
+	always @(posedge clk)
+	begin
+		if(rst_sync) begin
+			data_out <=#1 RESET_VALUE;
+		end else if(we) begin
+			data_out <=#1 data_in;
+		end
+	end
 
 endmodule
