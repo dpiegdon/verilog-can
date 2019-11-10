@@ -52,6 +52,7 @@ run_tests: $(TESTS)
 	done
 clean:
 	-rm *_tb.test
+	-rm *.vcd
 
 %_tb.test: %_tb.v %.v
 	iverilog -o $@ $^

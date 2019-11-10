@@ -47,6 +47,10 @@ module can_testbench();
 	parameter Tp = 1;
 	parameter BRP = 2*(`CAN_TIMING0_BRP + 1);
 
+	initial begin
+		$dumpfile("can_top_tb.vcd");
+		$dumpvars;
+	end
 
 	`ifdef CAN_WISHBONE_IF
 	reg         wb_clk_i;
