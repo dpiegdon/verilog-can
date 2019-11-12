@@ -460,6 +460,7 @@ module can_testbench();
 			read_register1(8'd3, tmp_data);
 			while (!(tmp_data & 8'h01)) begin
 				read_register1(8'd3, tmp_data);
+				#10000;
 			end
 
 			$display("Frame received by DUT1.");
