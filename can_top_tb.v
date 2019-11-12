@@ -444,7 +444,7 @@ module can_testbench();
 			-> igor;
 			$display("(%0t) CAN should be idle now", $time);
 
-			// Node 2 sends a message
+			// DUT2 sends a message
 			write_register2(8'd16, 8'h83); // tx registers
 			write_register2(8'd17, 8'h12); // tx registers
 			write_register2(8'd18, 8'h34); // tx registers
@@ -464,7 +464,7 @@ module can_testbench();
 
 			$display("Frame received by DUT1.");
 
-			// Node 1 will send a message and will receive many errors
+			// DUT1 will send a message and will receive many errors
 			write_register1(8'd16, 8'haa); // tx registers
 			write_register1(8'd17, 8'haa); // tx registers
 			write_register1(8'd18, 8'haa); // tx registers
@@ -1288,7 +1288,7 @@ module can_testbench();
 						send_bit(1);  // INTER
 					end // repeat
 
-					// Node is error passive now.
+					// DUT is error passive now.
 
 					// Read irq register (error interrupt should be cleared now.
 					read_register1(8'd3, tmp_data);
@@ -1361,7 +1361,7 @@ module can_testbench();
 
 					->igor;
 
-					// Node is bus-off now
+					// DUT is bus-off now
 
 
 					// Read irq register (error interrupt should be cleared now.
