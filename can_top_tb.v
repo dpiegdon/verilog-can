@@ -272,31 +272,31 @@ module can_testbench();
 		wait(start_tb);
 
 		// Set bus timing register 0
-		write_register(8'd6, {`CAN_TIMING0_SJW, `CAN_TIMING0_BRP});
+		write_register1(8'd6, {`CAN_TIMING0_SJW, `CAN_TIMING0_BRP});
 		write_register2(8'd6, {`CAN_TIMING0_SJW, `CAN_TIMING0_BRP});
 
 		// Set bus timing register 1
-		write_register(8'd7, {`CAN_TIMING1_SAM, `CAN_TIMING1_TSEG2, `CAN_TIMING1_TSEG1});
+		write_register1(8'd7, {`CAN_TIMING1_SAM, `CAN_TIMING1_TSEG2, `CAN_TIMING1_TSEG1});
 		write_register2(8'd7, {`CAN_TIMING1_SAM, `CAN_TIMING1_TSEG2, `CAN_TIMING1_TSEG1});
 
 
 		// Set Clock Divider register
 		//  extended_mode = 1'b1;
-		//  write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+		//  write_register1(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 		write_register2(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 
 
 		// Set Acceptance Code and Acceptance Mask registers (their address differs for basic and extended mode
 
 		/* Set Acceptance Code and Acceptance Mask registers
-		write_register(8'd16, 8'ha6); // acceptance code 0
-		write_register(8'd17, 8'hb0); // acceptance code 1
-		write_register(8'd18, 8'h12); // acceptance code 2
-		write_register(8'd19, 8'h30); // acceptance code 3
-		write_register(8'd20, 8'hff); // acceptance mask 0
-		write_register(8'd21, 8'hff); // acceptance mask 1
-		write_register(8'd22, 8'hff); // acceptance mask 2
-		write_register(8'd23, 8'hff); // acceptance mask 3
+		write_register1(8'd16, 8'ha6); // acceptance code 0
+		write_register1(8'd17, 8'hb0); // acceptance code 1
+		write_register1(8'd18, 8'h12); // acceptance code 2
+		write_register1(8'd19, 8'h30); // acceptance code 3
+		write_register1(8'd20, 8'hff); // acceptance mask 0
+		write_register1(8'd21, 8'hff); // acceptance mask 1
+		write_register1(8'd22, 8'hff); // acceptance mask 2
+		write_register1(8'd23, 8'hff); // acceptance mask 3
 
 		write_register2(8'd16, 8'ha6); // acceptance code 0
 		write_register2(8'd17, 8'hb0); // acceptance code 1
@@ -309,14 +309,14 @@ module can_testbench();
 		*/
 
 		// Set Acceptance Code and Acceptance Mask registers
-		write_register(8'd4, 8'he8); // acceptance code
-		write_register(8'd5, 8'h0f); // acceptance mask
+		write_register1(8'd4, 8'he8); // acceptance code
+		write_register1(8'd5, 8'h0f); // acceptance mask
 
 		#10;
 		repeat (1000) @(posedge dut_clk);
 
 		// Switch-off reset mode
-		write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+		write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 		write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 		repeat (BRP) @(posedge dut_clk);   // At least BRP clocks needed before bus goes to dominant level. Otherwise 1 quant difference is possible
@@ -351,51 +351,51 @@ module can_testbench();
 
 		// Switch-off reset mode
 		$display("Rest mode ON");
-		write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+		write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 		$display("Set extended mode");
 		extended_mode = 1'b1;
-		write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the extended mode
+		write_register1(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the extended mode
 
 		$display("Rest mode OFF");
-		write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+		write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
-		write_register(8'd14, 8'hde); // rx err cnt
-		write_register(8'd15, 8'had); // tx err cnt
+		write_register1(8'd14, 8'hde); // rx err cnt
+		write_register1(8'd15, 8'had); // tx err cnt
 
-		read_register(8'd14, tmp_data); // rx err cnt
-		read_register(8'd15, tmp_data); // tx err cnt
-
-		// Switch-on reset mode
-		$display("Switch-on reset mode");
-		write_register(8'd0, {7'h0, `CAN_MODE_RESET});
-
-		write_register(8'd14, 8'h12); // rx err cnt
-		write_register(8'd15, 8'h34); // tx err cnt
-
-		read_register(8'd14, tmp_data); // rx err cnt
-		read_register(8'd15, tmp_data); // tx err cnt
-
-		// Switch-off reset mode
-		$display("Switch-off reset mode");
-		write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
-
-		read_register(8'd14, tmp_data); // rx err cnt
-		read_register(8'd15, tmp_data); // tx err cnt
+		read_register1(8'd14, tmp_data); // rx err cnt
+		read_register1(8'd15, tmp_data); // tx err cnt
 
 		// Switch-on reset mode
 		$display("Switch-on reset mode");
-		write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+		write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 
-		write_register(8'd14, 8'h56); // rx err cnt
-		write_register(8'd15, 8'h78); // tx err cnt
+		write_register1(8'd14, 8'h12); // rx err cnt
+		write_register1(8'd15, 8'h34); // tx err cnt
+
+		read_register1(8'd14, tmp_data); // rx err cnt
+		read_register1(8'd15, tmp_data); // tx err cnt
 
 		// Switch-off reset mode
 		$display("Switch-off reset mode");
-		write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+		write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
-		read_register(8'd14, tmp_data); // rx err cnt
-		read_register(8'd15, tmp_data); // tx err cnt
+		read_register1(8'd14, tmp_data); // rx err cnt
+		read_register1(8'd15, tmp_data); // tx err cnt
+
+		// Switch-on reset mode
+		$display("Switch-on reset mode");
+		write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
+
+		write_register1(8'd14, 8'h56); // rx err cnt
+		write_register1(8'd15, 8'h78); // tx err cnt
+
+		// Switch-off reset mode
+		$display("Switch-off reset mode");
+		write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+
+		read_register1(8'd14, tmp_data); // rx err cnt
+		read_register1(8'd15, tmp_data); // tx err cnt
 		*/
 	       #1000;
 	       $display("CAN Testbench finished !");
@@ -407,22 +407,22 @@ module can_testbench();
 		begin -> igor;
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+			write_register1(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 			write_register2(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 
-			write_register(8'd16, 8'h00); // acceptance code 0
-			write_register(8'd17, 8'h00); // acceptance code 1
-			write_register(8'd18, 8'h00); // acceptance code 2
-			write_register(8'd19, 8'h00); // acceptance code 3
-			write_register(8'd20, 8'hff); // acceptance mask 0
-			write_register(8'd21, 8'hff); // acceptance mask 1
-			write_register(8'd22, 8'hff); // acceptance mask 2
-			write_register(8'd23, 8'hff); // acceptance mask 3
+			write_register1(8'd16, 8'h00); // acceptance code 0
+			write_register1(8'd17, 8'h00); // acceptance code 1
+			write_register1(8'd18, 8'h00); // acceptance code 2
+			write_register1(8'd19, 8'h00); // acceptance code 3
+			write_register1(8'd20, 8'hff); // acceptance mask 0
+			write_register1(8'd21, 8'hff); // acceptance mask 1
+			write_register1(8'd22, 8'hff); // acceptance mask 2
+			write_register1(8'd23, 8'hff); // acceptance mask 3
 
 			write_register2(8'd16, 8'h00); // acceptance code 0
 			write_register2(8'd17, 8'h00); // acceptance code 1
@@ -434,11 +434,11 @@ module can_testbench();
 			write_register2(8'd23, 8'hff); // acceptance mask 3
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// Enable all interrupts
-			write_register(8'd4, 8'hff); // irq enable register
+			write_register1(8'd4, 8'hff); // irq enable register
 
 			repeat (30) send_bit(1);
 			-> igor;
@@ -456,31 +456,31 @@ module can_testbench();
 
 			write_register2(8'd1, 8'h1);  // tx request
 
-			// Wait until node 1 receives rx irq
-			read_register(8'd3, tmp_data);
+			// Wait until DUT 1 receives rx irq
+			read_register1(8'd3, tmp_data);
 			while (!(tmp_data & 8'h01)) begin
-				read_register(8'd3, tmp_data);
+				read_register1(8'd3, tmp_data);
 			end
 
-			$display("Frame received by node 1.");
+			$display("Frame received by DUT1.");
 
 			// Node 1 will send a message and will receive many errors
-			write_register(8'd16, 8'haa); // tx registers
-			write_register(8'd17, 8'haa); // tx registers
-			write_register(8'd18, 8'haa); // tx registers
-			write_register(8'd19, 8'haa); // tx registers
-			write_register(8'd20, 8'haa); // tx registers
-			write_register(8'd21, 8'haa); // tx registers
-			write_register(8'd22, 8'haa); // tx registers
-			write_register(8'd23, 8'haa); // tx registers
+			write_register1(8'd16, 8'haa); // tx registers
+			write_register1(8'd17, 8'haa); // tx registers
+			write_register1(8'd18, 8'haa); // tx registers
+			write_register1(8'd19, 8'haa); // tx registers
+			write_register1(8'd20, 8'haa); // tx registers
+			write_register1(8'd21, 8'haa); // tx registers
+			write_register1(8'd22, 8'haa); // tx registers
+			write_register1(8'd23, 8'haa); // tx registers
 
 			fork 
 				begin
-					write_register(8'd1, 8'h1);  // tx request
+					write_register1(8'd1, 8'h1);  // tx request
 				end
 
 				begin
-					// Waiting until node 1 starts transmitting
+					// Waiting until DUT 1 starts transmitting
 					wait (!dut1_tx);
 					repeat (33) send_bit(1);
 					repeat (330) send_bit(0);
@@ -490,19 +490,19 @@ module can_testbench();
 			join
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			repeat (1999) send_bit(1);
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
-			write_register(8'd14, 8'h0); // rx err cnt
+			write_register1(8'd14, 8'h0); // rx err cnt
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// Wait some time before simulation ends
@@ -514,19 +514,19 @@ module can_testbench();
 	task error_test;
 		begin
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+			write_register1(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 			write_register2(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 			// Set error warning limit register
-			write_register(8'd13, 8'h56); // error warning limit
+			write_register1(8'd13, 8'h56); // error warning limit
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			// Enable all interrupts
-			write_register(8'd4, 8'hff); // irq enable register
+			write_register1(8'd4, 8'hff); // irq enable register
 
 			repeat (300) send_bit(0);
 
@@ -541,20 +541,20 @@ module can_testbench();
 		begin
 			$display("Change mode to extended mode and test registers");
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+			write_register1(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 			write_register2(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			for (i=1; i<128; i=i+1) begin
 				for (j=0; j<8; j=j+1) begin
-					read_register(i, tmp_data);
-					write_register(i, tmp_data | (1 << j));
+					read_register1(i, tmp_data);
+					write_register1(i, tmp_data | (1 << j));
 				end
 			end
 
@@ -565,23 +565,23 @@ module can_testbench();
 	task forced_bus_off;    // Forcing bus-off by writinf to tx_err_cnt register
 		begin
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+			write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 			// Set Clock Divider register
-			write_register(8'd31, {1'b1, 7'h0});    // Setting the extended mode (not normal)
+			write_register1(8'd31, {1'b1, 7'h0});    // Setting the extended mode (not normal)
 			// Write 255 to tx_err_cnt register - Forcing bus-off
-			write_register(8'd15, 255);
+			write_register1(8'd15, 255);
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			//    #1000000;
 			#2500000;
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+			write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 			// Write 245 to tx_err_cnt register
-			write_register(8'd15, 245);
+			write_register1(8'd15, 245);
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			#1000000;
 		end
@@ -591,31 +591,31 @@ module can_testbench();
 	task manual_frame_basic;    // Testbench sends a basic format frame
 		begin
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 			// Set Acceptance Code and Acceptance Mask registers
-			write_register(8'd4, 8'h28); // acceptance code
-			write_register(8'd5, 8'hff); // acceptance mask
+			write_register1(8'd4, 8'h28); // acceptance code
+			write_register1(8'd5, 8'hff); // acceptance mask
 
 			repeat (100) @(posedge dut_clk);
 
 			// Switch-off reset mode
-			//    write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
-			write_register(8'd0, 8'h1e);  // reset_off, all irqs enabled.
+			//    write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, 8'h1e);  // reset_off, all irqs enabled.
 
 			// After exiting the reset mode sending bus free
 			repeat (11) send_bit(1);
 
-			write_register(8'd10, 8'h55); // Writing ID[10:3] = 0x55
-			write_register(8'd11, 8'h77); // Writing ID[2:0] = 0x3, rtr = 1, length = 7
-			write_register(8'd12, 8'h00); // data byte 1
-			write_register(8'd13, 8'h00); // data byte 2
-			write_register(8'd14, 8'h00); // data byte 3
-			write_register(8'd15, 8'h00); // data byte 4
-			write_register(8'd16, 8'h00); // data byte 5
-			write_register(8'd17, 8'h00); // data byte 6
-			write_register(8'd18, 8'h00); // data byte 7
-			write_register(8'd19, 8'h00); // data byte 8
+			write_register1(8'd10, 8'h55); // Writing ID[10:3] = 0x55
+			write_register1(8'd11, 8'h77); // Writing ID[2:0] = 0x3, rtr = 1, length = 7
+			write_register1(8'd12, 8'h00); // data byte 1
+			write_register1(8'd13, 8'h00); // data byte 2
+			write_register1(8'd14, 8'h00); // data byte 3
+			write_register1(8'd15, 8'h00); // data byte 4
+			write_register1(8'd16, 8'h00); // data byte 5
+			write_register1(8'd17, 8'h00); // data byte 6
+			write_register1(8'd18, 8'h00); // data byte 7
+			write_register1(8'd19, 8'h00); // data byte 8
 
 			tx_bypassed = 0;    // When this signal is on, tx is not looped back to the rx.
 
@@ -734,7 +734,7 @@ module can_testbench();
 			read_receive_buffer;
 			release_rx_buffer_command;
 
-			#1000 read_register(8'd3, tmp_data);
+			#1000 read_register1(8'd3, tmp_data);
 			read_receive_buffer;
 			release_rx_buffer_command;
 			read_receive_buffer;
@@ -900,7 +900,7 @@ module can_testbench();
 			read_receive_buffer;
 			release_rx_buffer_command;
 
-			#1000 read_register(8'd3, tmp_data);
+			#1000 read_register1(8'd3, tmp_data);
 			read_receive_buffer;
 			release_rx_buffer_command;
 			read_receive_buffer;
@@ -915,32 +915,32 @@ module can_testbench();
 
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
+			write_register1(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
 
 			// Set Acceptance Code and Acceptance Mask registers
-			write_register(8'd16, 8'ha6); // acceptance code 0
-			write_register(8'd17, 8'h00); // acceptance code 1
-			write_register(8'd18, 8'h5a); // acceptance code 2
-			write_register(8'd19, 8'hac); // acceptance code 3
-			write_register(8'd20, 8'h00); // acceptance mask 0
-			write_register(8'd21, 8'h00); // acceptance mask 1
-			write_register(8'd22, 8'h00); // acceptance mask 2
-			write_register(8'd23, 8'h00); // acceptance mask 3
+			write_register1(8'd16, 8'ha6); // acceptance code 0
+			write_register1(8'd17, 8'h00); // acceptance code 1
+			write_register1(8'd18, 8'h5a); // acceptance code 2
+			write_register1(8'd19, 8'hac); // acceptance code 3
+			write_register1(8'd20, 8'h00); // acceptance mask 0
+			write_register1(8'd21, 8'h00); // acceptance mask 1
+			write_register1(8'd22, 8'h00); // acceptance mask 2
+			write_register1(8'd23, 8'h00); // acceptance mask 3
 
-			//write_register(8'd14, 8'h7a); // rx err cnt
-			//write_register(8'd15, 8'h7a); // tx err cnt
+			//write_register1(8'd14, 8'h7a); // rx err cnt
+			//write_register1(8'd15, 8'h7a); // tx err cnt
 
-			//read_register(8'd14, tmp_data); // rx err cnt
-			//read_register(8'd15, tmp_data); // tx err cnt
+			//read_register1(8'd14, tmp_data); // rx err cnt
+			//read_register1(8'd15, tmp_data); // tx err cnt
 
 			repeat (100) @(posedge dut_clk);
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// After exiting the reset mode sending bus free
 			repeat (11) send_bit(1);
@@ -948,23 +948,23 @@ module can_testbench();
 
 			// Extended frame format
 			// Writing TX frame information + identifier + data
-			write_register(8'd16, 8'hc5);   // Frame format = 1, Remote transmision request = 1, DLC = 5
-			write_register(8'd17, 8'ha6);   // ID[28:21] = a6
-			write_register(8'd18, 8'h00);   // ID[20:13] = 00
-			write_register(8'd19, 8'h5a);   // ID[12:5]  = 5a
-			write_register(8'd20, 8'ha8);   // ID[4:0]   = 15
-			// write_register(8'd21, 8'h78); RTR does not send any data
-			// write_register(8'd22, 8'h9a);
-			// write_register(8'd23, 8'hbc);
-			// write_register(8'd24, 8'hde);
-			// write_register(8'd25, 8'hf0);
-			// write_register(8'd26, 8'h0f);
-			// write_register(8'd27, 8'hed);
-			// write_register(8'd28, 8'hcb);
+			write_register1(8'd16, 8'hc5);   // Frame format = 1, Remote transmision request = 1, DLC = 5
+			write_register1(8'd17, 8'ha6);   // ID[28:21] = a6
+			write_register1(8'd18, 8'h00);   // ID[20:13] = 00
+			write_register1(8'd19, 8'h5a);   // ID[12:5]  = 5a
+			write_register1(8'd20, 8'ha8);   // ID[4:0]   = 15
+			// write_register1(8'd21, 8'h78); RTR does not send any data
+			// write_register1(8'd22, 8'h9a);
+			// write_register1(8'd23, 8'hbc);
+			// write_register1(8'd24, 8'hde);
+			// write_register1(8'd25, 8'hf0);
+			// write_register1(8'd26, 8'h0f);
+			// write_register1(8'd27, 8'hed);
+			// write_register1(8'd28, 8'hcb);
 
 
 			// Enabling IRQ's (extended mode)
-			write_register(8'd4, 8'hff);
+			write_register1(8'd4, 8'hff);
 
 			// tx_bypassed = 1;    // When this signal is on, tx is not looped back to the rx.
 
@@ -1196,16 +1196,16 @@ module can_testbench();
 			read_receive_buffer;
 
 			// Read irq register
-			#1 read_register(8'd3, tmp_data);
+			#1 read_register1(8'd3, tmp_data);
 
 			// Read error code capture register
-			read_register(8'd12, tmp_data);
+			read_register1(8'd12, tmp_data);
 
 			// Read error capture code register
-			//    read_register(8'd12, tmp_data);
+			//    read_register1(8'd12, tmp_data);
 
-			read_register(8'd14, tmp_data); // rx err cnt
-			read_register(8'd15, tmp_data); // tx err cnt
+			read_register1(8'd14, tmp_data); // rx err cnt
+			read_register1(8'd15, tmp_data); // tx err cnt
 
 			#4000000;
 		end
@@ -1215,16 +1215,16 @@ module can_testbench();
 	task bus_off_test;    // Testbench sends a frame
 		begin
 
-			write_register(8'd10, 8'he8); // Writing ID[10:3] = 0xe8
-			write_register(8'd11, 8'hb7); // Writing ID[2:0] = 0x5, rtr = 1, length = 7
-			write_register(8'd12, 8'h00); // data byte 1
-			write_register(8'd13, 8'h00); // data byte 2
-			write_register(8'd14, 8'h00); // data byte 3
-			write_register(8'd15, 8'h00); // data byte 4
-			write_register(8'd16, 8'h00); // data byte 5
-			write_register(8'd17, 8'h00); // data byte 6
-			write_register(8'd18, 8'h00); // data byte 7
-			write_register(8'd19, 8'h00); // data byte 8
+			write_register1(8'd10, 8'he8); // Writing ID[10:3] = 0xe8
+			write_register1(8'd11, 8'hb7); // Writing ID[2:0] = 0x5, rtr = 1, length = 7
+			write_register1(8'd12, 8'h00); // data byte 1
+			write_register1(8'd13, 8'h00); // data byte 2
+			write_register1(8'd14, 8'h00); // data byte 3
+			write_register1(8'd15, 8'h00); // data byte 4
+			write_register1(8'd16, 8'h00); // data byte 5
+			write_register1(8'd17, 8'h00); // data byte 6
+			write_register1(8'd18, 8'h00); // data byte 7
+			write_register1(8'd19, 8'h00); // data byte 8
 
 			fork
 				begin
@@ -1291,7 +1291,7 @@ module can_testbench();
 					// Node is error passive now.
 
 					// Read irq register (error interrupt should be cleared now.
-					read_register(8'd3, tmp_data);
+					read_register1(8'd3, tmp_data);
 
 					->igor;
 
@@ -1365,26 +1365,26 @@ module can_testbench();
 
 
 					// Read irq register (error interrupt should be cleared now.
-					read_register(8'd3, tmp_data);
+					read_register1(8'd3, tmp_data);
 
 					#100000;
 
 					// Switch-off reset mode
-					write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+					write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 					repeat (64 * 11) begin
 						send_bit(1);
 					end // repeat
 
 					// Read irq register (error interrupt should be cleared now.
-					read_register(8'd3, tmp_data);
+					read_register1(8'd3, tmp_data);
 
 					repeat (64 * 11) begin
 						send_bit(1);
 					end // repeat
 
 					// Read irq register (error interrupt should be cleared now.
-					read_register(8'd3, tmp_data);
+					read_register1(8'd3, tmp_data);
 				end
 			join
 
@@ -1469,19 +1469,19 @@ module can_testbench();
 	task send_frame_basic;    // CAN IP core sends frames
 		begin
 
-			write_register(8'd10, 8'hea); // Writing ID[10:3] = 0xea
-			write_register(8'd11, 8'h28); // Writing ID[2:0] = 0x1, rtr = 0, length = 8
-			write_register(8'd12, 8'h56); // data byte 1
-			write_register(8'd13, 8'h78); // data byte 2
-			write_register(8'd14, 8'h9a); // data byte 3
-			write_register(8'd15, 8'hbc); // data byte 4
-			write_register(8'd16, 8'hde); // data byte 5
-			write_register(8'd17, 8'hf0); // data byte 6
-			write_register(8'd18, 8'h0f); // data byte 7
-			write_register(8'd19, 8'hed); // data byte 8
+			write_register1(8'd10, 8'hea); // Writing ID[10:3] = 0xea
+			write_register1(8'd11, 8'h28); // Writing ID[2:0] = 0x1, rtr = 0, length = 8
+			write_register1(8'd12, 8'h56); // data byte 1
+			write_register1(8'd13, 8'h78); // data byte 2
+			write_register1(8'd14, 8'h9a); // data byte 3
+			write_register1(8'd15, 8'hbc); // data byte 4
+			write_register1(8'd16, 8'hde); // data byte 5
+			write_register1(8'd17, 8'hf0); // data byte 6
+			write_register1(8'd18, 8'h0f); // data byte 7
+			write_register1(8'd19, 8'hed); // data byte 8
 
 			// Enable irqs (basic mode)
-			write_register(8'd0, 8'h1e);
+			write_register1(8'd0, 8'h1e);
 
 			fork
 				begin
@@ -1532,7 +1532,7 @@ module can_testbench();
 			read_receive_buffer;
 
 			// Read irq register
-			read_register(8'd3, tmp_data);
+			read_register1(8'd3, tmp_data);
 			#1000;
 		end
 	endtask   // send_frame_basic
@@ -1543,23 +1543,23 @@ module can_testbench();
 		begin
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
+			write_register1(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
 			write_register2(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
 
 			// Set Acceptance Code and Acceptance Mask registers
-			write_register(8'd16, 8'ha6); // acceptance code 0
-			write_register(8'd17, 8'hb0); // acceptance code 1
-			write_register(8'd18, 8'h12); // acceptance code 2
-			write_register(8'd19, 8'h30); // acceptance code 3
-			write_register(8'd20, 8'h00); // acceptance mask 0
-			write_register(8'd21, 8'h00); // acceptance mask 1
-			write_register(8'd22, 8'h00); // acceptance mask 2
-			write_register(8'd23, 8'h00); // acceptance mask 3
+			write_register1(8'd16, 8'ha6); // acceptance code 0
+			write_register1(8'd17, 8'hb0); // acceptance code 1
+			write_register1(8'd18, 8'h12); // acceptance code 2
+			write_register1(8'd19, 8'h30); // acceptance code 3
+			write_register1(8'd20, 8'h00); // acceptance mask 0
+			write_register1(8'd21, 8'h00); // acceptance mask 1
+			write_register1(8'd22, 8'h00); // acceptance mask 2
+			write_register1(8'd23, 8'h00); // acceptance mask 3
 
 			write_register2(8'd16, 8'ha6); // acceptance code 0
 			write_register2(8'd17, 8'hb0); // acceptance code 1
@@ -1571,7 +1571,7 @@ module can_testbench();
 			write_register2(8'd23, 8'h00); // acceptance mask 3
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// After exiting the reset mode sending bus free
@@ -1580,45 +1580,45 @@ module can_testbench();
 
 			/*  Basic frame format
 			// Writing TX frame information + identifier + data
-			write_register(8'd16, 8'h45);   // Frame format = 0, Remote transmision request = 1, DLC = 5
-			write_register(8'd17, 8'ha6);   // ID[28:21] = a6
-			write_register(8'd18, 8'ha0);   // ID[20:18] = 5
-			// write_register(8'd19, 8'h78); RTR does not send any data
-			// write_register(8'd20, 8'h9a);
-			// write_register(8'd21, 8'hbc);
-			// write_register(8'd22, 8'hde);
-			// write_register(8'd23, 8'hf0);
-			// write_register(8'd24, 8'h0f);
-			// write_register(8'd25, 8'hed);
-			// write_register(8'd26, 8'hcb);
-			// write_register(8'd27, 8'ha9);
-			// write_register(8'd28, 8'h87);
+			write_register1(8'd16, 8'h45);   // Frame format = 0, Remote transmision request = 1, DLC = 5
+			write_register1(8'd17, 8'ha6);   // ID[28:21] = a6
+			write_register1(8'd18, 8'ha0);   // ID[20:18] = 5
+			// write_register1(8'd19, 8'h78); RTR does not send any data
+			// write_register1(8'd20, 8'h9a);
+			// write_register1(8'd21, 8'hbc);
+			// write_register1(8'd22, 8'hde);
+			// write_register1(8'd23, 8'hf0);
+			// write_register1(8'd24, 8'h0f);
+			// write_register1(8'd25, 8'hed);
+			// write_register1(8'd26, 8'hcb);
+			// write_register1(8'd27, 8'ha9);
+			// write_register1(8'd28, 8'h87);
 			*/
 
 			// Extended frame format
 			// Writing TX frame information + identifier + data
-			write_register(8'd16, 8'hc5);   // Frame format = 1, Remote transmision request = 1, DLC = 5
-			write_register(8'd17, 8'ha6);   // ID[28:21] = a6
-			write_register(8'd18, 8'h00);   // ID[20:13] = 00
-			write_register(8'd19, 8'h5a);   // ID[12:5]  = 5a
-			write_register(8'd20, 8'ha8);   // ID[4:0]   = 15
+			write_register1(8'd16, 8'hc5);   // Frame format = 1, Remote transmision request = 1, DLC = 5
+			write_register1(8'd17, 8'ha6);   // ID[28:21] = a6
+			write_register1(8'd18, 8'h00);   // ID[20:13] = 00
+			write_register1(8'd19, 8'h5a);   // ID[12:5]  = 5a
+			write_register1(8'd20, 8'ha8);   // ID[4:0]   = 15
 			write_register2(8'd16, 8'hc5);   // Frame format = 1, Remote transmision request = 1, DLC = 5
 			write_register2(8'd17, 8'ha6);   // ID[28:21] = a6
 			write_register2(8'd18, 8'h00);   // ID[20:13] = 00
 			write_register2(8'd19, 8'h5a);   // ID[12:5]  = 5a
 			write_register2(8'd20, 8'ha8);   // ID[4:0]   = 15
-			// write_register(8'd21, 8'h78); RTR does not send any data
-			// write_register(8'd22, 8'h9a);
-			// write_register(8'd23, 8'hbc);
-			// write_register(8'd24, 8'hde);
-			// write_register(8'd25, 8'hf0);
-			// write_register(8'd26, 8'h0f);
-			// write_register(8'd27, 8'hed);
-			// write_register(8'd28, 8'hcb);
+			// write_register1(8'd21, 8'h78); RTR does not send any data
+			// write_register1(8'd22, 8'h9a);
+			// write_register1(8'd23, 8'hbc);
+			// write_register1(8'd24, 8'hde);
+			// write_register1(8'd25, 8'hf0);
+			// write_register1(8'd26, 8'h0f);
+			// write_register1(8'd27, 8'hed);
+			// write_register1(8'd28, 8'hcb);
 
 
 			// Enabling IRQ's (extended mode)
-			write_register(8'd4, 8'hff);
+			write_register1(8'd4, 8'hff);
 			write_register2(8'd4, 8'hff);
 
 
@@ -1663,10 +1663,10 @@ module can_testbench();
 						end
 
 						// Read irq register
-						#1 read_register(8'd3, tmp_data);
+						#1 read_register1(8'd3, tmp_data);
 
 						// Read arbitration lost capture register
-						read_register(8'd11, tmp_data);
+						read_register1(8'd11, tmp_data);
 					end
 
 
@@ -1676,7 +1676,7 @@ module can_testbench();
 						end
 
 						// Read irq register
-						#1 read_register(8'd3, tmp_data);
+						#1 read_register1(8'd3, tmp_data);
 					end
 
 					repeat(1) begin
@@ -1685,7 +1685,7 @@ module can_testbench();
 						end
 
 						// Read arbitration lost capture register
-						read_register(8'd11, tmp_data);
+						read_register1(8'd11, tmp_data);
 					end
 
 				end
@@ -1695,12 +1695,12 @@ module can_testbench();
 
 					// Switch-on reset mode
 					$display("expect: SW reset ON\n");
-					write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+					write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 					#40000;
 					// Switch-off reset mode
 					$display("expect: SW reset OFF\n");
-					write_register(8'd0, {7'h0, (~`CAN_MODE_RESET)});
+					write_register1(8'd0, {7'h0, (~`CAN_MODE_RESET)});
 				end
 
 			join
@@ -1721,7 +1721,7 @@ module can_testbench();
 			read_receive_buffer;
 
 			// Read irq register
-			read_register(8'd3, tmp_data);
+			read_register1(8'd3, tmp_data);
 			#1000;
 
 		end
@@ -1733,50 +1733,50 @@ module can_testbench();
 		begin
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
 			// Set Clock Divider register
 			extended_mode = 1'b1;
-			write_register(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
+			write_register1(8'd31, {extended_mode, 7'h0});    // Setting the extended mode
 
 			// Set Acceptance Code and Acceptance Mask registers
-			write_register(8'd16, 8'ha6); // acceptance code 0
-			write_register(8'd17, 8'hb0); // acceptance code 1
-			write_register(8'd18, 8'h12); // acceptance code 2
-			write_register(8'd19, 8'h30); // acceptance code 3
-			write_register(8'd20, 8'h00); // acceptance mask 0
-			write_register(8'd21, 8'h00); // acceptance mask 1
-			write_register(8'd22, 8'h00); // acceptance mask 2
-			write_register(8'd23, 8'h00); // acceptance mask 3
+			write_register1(8'd16, 8'ha6); // acceptance code 0
+			write_register1(8'd17, 8'hb0); // acceptance code 1
+			write_register1(8'd18, 8'h12); // acceptance code 2
+			write_register1(8'd19, 8'h30); // acceptance code 3
+			write_register1(8'd20, 8'h00); // acceptance mask 0
+			write_register1(8'd21, 8'h00); // acceptance mask 1
+			write_register1(8'd22, 8'h00); // acceptance mask 2
+			write_register1(8'd23, 8'h00); // acceptance mask 3
 
 			// Setting the "self test mode"
-			write_register(8'd0, 8'h4);
+			write_register1(8'd0, 8'h4);
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// After exiting the reset mode sending bus free
 			repeat (11) send_bit(1);
 
 
 			// Writing TX frame information + identifier + data
-			write_register(8'd16, 8'h45);   // Frame format = 0, Remote transmision request = 1, DLC = 5
-			write_register(8'd17, 8'ha6);   // ID[28:21] = a6
-			write_register(8'd18, 8'ha0);   // ID[20:18] = 5
-			// write_register(8'd19, 8'h78); RTR does not send any data
-			// write_register(8'd20, 8'h9a);
-			// write_register(8'd21, 8'hbc);
-			// write_register(8'd22, 8'hde);
-			// write_register(8'd23, 8'hf0);
-			// write_register(8'd24, 8'h0f);
-			// write_register(8'd25, 8'hed);
-			// write_register(8'd26, 8'hcb);
-			// write_register(8'd27, 8'ha9);
-			// write_register(8'd28, 8'h87);
+			write_register1(8'd16, 8'h45);   // Frame format = 0, Remote transmision request = 1, DLC = 5
+			write_register1(8'd17, 8'ha6);   // ID[28:21] = a6
+			write_register1(8'd18, 8'ha0);   // ID[20:18] = 5
+			// write_register1(8'd19, 8'h78); RTR does not send any data
+			// write_register1(8'd20, 8'h9a);
+			// write_register1(8'd21, 8'hbc);
+			// write_register1(8'd22, 8'hde);
+			// write_register1(8'd23, 8'hf0);
+			// write_register1(8'd24, 8'h0f);
+			// write_register1(8'd25, 8'hed);
+			// write_register1(8'd26, 8'hcb);
+			// write_register1(8'd27, 8'ha9);
+			// write_register1(8'd28, 8'h87);
 
 
 			// Enabling IRQ's (extended mode)
-			write_register(8'd4, 8'hff);
+			write_register1(8'd4, 8'hff);
 
 			self_reception_request_command;
 
@@ -1797,7 +1797,7 @@ module can_testbench();
 			read_receive_buffer;
 
 			// Read irq register
-			read_register(8'd3, tmp_data);
+			read_register1(8'd3, tmp_data);
 			#1000;
 
 		end
@@ -1809,7 +1809,7 @@ module can_testbench();
 		begin
 
 			// Enable irqs (basic mode)
-			write_register(8'd0, 8'h1e);
+			write_register1(8'd0, 8'h1e);
 
 			receive_frame(0, 0, {26'h00000e8, 3'h1}, 4'h3, 15'h56a9); // mode, rtr, id, length, crc
 			receive_frame(0, 0, {26'h00000e8, 3'h1}, 4'h7, 15'h391d); // mode, rtr, id, length, crc
@@ -1899,8 +1899,8 @@ module can_testbench();
 		begin
 
 			// Enable irqs (basic mode)
-			// write_register(8'd0, 8'h1e);
-			write_register(8'd0, 8'h10); // enable only overrun irq
+			// write_register1(8'd0, 8'h1e);
+			write_register1(8'd0, 8'h10); // enable only overrun irq
 
 			$display("\n\n");
 
@@ -2024,10 +2024,10 @@ module can_testbench();
 			fifo_info;
 
 			// Read irq register
-			read_register(8'd3, tmp_data);
+			read_register1(8'd3, tmp_data);
 
 			// Read irq register
-			read_register(8'd3, tmp_data);
+			read_register1(8'd3, tmp_data);
 			#1000;
 
 		end
@@ -2128,10 +2128,10 @@ module can_testbench();
 			$display("expect: SW reset performed\n");
 
 			// Switch-on reset mode
-			write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+			write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 
 			// Switch-off reset mode
-			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			fifo_info;
 			read_receive_buffer;
@@ -2144,7 +2144,7 @@ module can_testbench();
 
 			// Switch-on reset mode
 			$display("expect: SW reset ON\n");
-			write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+			write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 
 			receive_frame(1, 0, 29'h14d60246, 4'h5, 15'h4d7d); // mode, rtr, id, length, crc
 
@@ -2159,10 +2159,10 @@ module can_testbench();
 				end
 				begin
 					// Switch-on reset mode
-					write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+					write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 
 					// Switch-off reset mode
-					write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+					write_register1(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 
 				end
@@ -2187,7 +2187,7 @@ module can_testbench();
 
 			// Switch-off reset mode
 			$display("expect: SW reset OFF\n");
-			write_register(8'd0, {7'h0, (~`CAN_MODE_RESET)});
+			write_register1(8'd0, {7'h0, (~`CAN_MODE_RESET)});
 
 			receive_frame(1, 0, 29'h14d60246, 4'h8, 15'h2f7a); // mode, rtr, id, length, crc
 			fifo_info;
@@ -2208,7 +2208,7 @@ module can_testbench();
 					#8000;
 					// Switch-off reset mode
 					$display("expect: SW reset ON while receiving a packet\n");
-					write_register(8'd0, {7'h0, `CAN_MODE_RESET});
+					write_register1(8'd0, {7'h0, `CAN_MODE_RESET});
 				end
 			join
 
@@ -2267,38 +2267,58 @@ module can_testbench();
 	endtask
 
 
-	task read_register;
-		input [7:0] reg_addr;
-		output [7:0] data;
 
-		`ifdef CAN_WISHBONE_IF
+	/*
+	 * task to read a register via the connected bus.
+	 * @dut: which device to interface with (1 or 2)
+	 * @reg_addr: address of register to read
+	 * @reg_data: output value
+	 */
+	task read_register;
+		input integer dut;
+		input [7:0] reg_addr;
+		output [7:0] reg_data;
+
 		begin
 			wait (bus_free);
 			bus_free = 0;
+
+			`ifdef CAN_WISHBONE_IF
 			@(posedge dut_wb_clk_i);
 			#1; 
 			dut_wb_adr_i = reg_addr;
-			dut_wb_cyc_i1 = 1;
+			if(dut == 1) begin
+				dut_wb_cyc_i1 = 1;
+			end else if(dut == 2) begin
+				dut_wb_cyc_i2 = 1;
+			end
 			dut_wb_stb_i = 1;
 			dut_wb_we_i = 0;
-			wait (dut_wb_ack_o1);
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, dut_wb_adr_i, dut_wb_dat_o1);
-			data = dut_wb_dat_o1;
+			if(dut == 1) begin
+				wait (dut_wb_ack_o1);
+				reg_data = dut_wb_dat_o1;
+			end else if(dut == 2) begin
+				wait (dut_wb_ack_o2);
+				reg_data = dut_wb_dat_o2;
+			end
 			@(posedge dut_wb_clk_i);
 			#1; 
 			dut_wb_adr_i = 'hz;
-			dut_wb_cyc_i1 = 0;
+			if(dut == 1) begin
+				dut_wb_cyc_i1 = 0;
+			end else if(dut == 2) begin
+				dut_wb_cyc_i2 = 0;
+			end
 			dut_wb_stb_i = 0;
 			dut_wb_we_i = 'hz;
-			bus_free = 1;
-		end
-		`else
-		begin
-			wait (bus_free);
-			bus_free = 0;
+			`else
 			@(posedge dut_clk);
 			#1;
-			dut_cs1 = 1;
+			if(dut == 1) begin
+				dut_cs1 = 1;
+			end else if(dut == 2) begin
+				dut_cs2 = 1;
+			end
 			@(negedge dut_clk);
 			#1;
 			dut_ale = 1;
@@ -2311,50 +2331,93 @@ module can_testbench();
 			dut_port0_en = 0;
 			dut_rd = 1;
 			#158;
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.dut1.addr_latched, dut_port0);
-			data = dut_port0;
+			reg_data = dut_port0;
 			#1;
 			dut_rd = 0;
-			dut_cs1 = 0;
+			if(dut == 1) begin
+				dut_cs1 = 0;
+			end else if(dut == 2) begin
+				dut_cs2 = 0;
+			end
+			`endif
+
+			$display("(%012t) DUT%1d GET register %0d == 0x%0x", $time, dut, reg_addr, reg_data);
 			bus_free = 1;
 		end
-		`endif
+	endtask
+
+	/* read a register of dut2 */
+	task read_register1;
+		input [7:0] reg_addr;
+		output [7:0] reg_data;
+		begin
+			read_register(1, reg_addr, reg_data);
+		end
+	endtask
+
+	/* read a register of dut2 */
+	task read_register2;
+		input [7:0] reg_addr;
+		output [7:0] reg_data;
+		begin
+			read_register(2, reg_addr, reg_data);
+		end
 	endtask
 
 
+
+	/*
+	 * task to write a register via the connected bus.
+	 * @dut: which device to interface with (1 or 2)
+	 * @reg_addr: address of register to write
+	 * @reg_data: output value
+	 */
 	task write_register;
+		input integer dut;
 		input [7:0] reg_addr;
 		input [7:0] reg_data;
 
-		`ifdef CAN_WISHBONE_IF
 		begin
 			wait (bus_free);
 			bus_free = 0;
+			$display("(%012t) DUT%1d SET register %0d := 0x%0x", $time, dut, reg_addr, reg_data);
+
+			`ifdef CAN_WISHBONE_IF
 			@(posedge dut_wb_clk_i);
 			#1; 
 			dut_wb_adr_i = reg_addr;
 			dut_wb_dat_i = reg_data;
-			dut_wb_cyc_i1 = 1;
+			if(dut == 1) begin
+				dut_wb_cyc_i1 = 1;
+			end else if(dut == 2) begin
+				dut_wb_cyc_i2 = 1;
+			end
 			dut_wb_stb_i = 1;
 			dut_wb_we_i = 1;
-			wait (dut_wb_ack_o1);
+			if(dut == 1) begin
+				wait (dut_wb_ack_o1);
+			end else if(dut == 2) begin
+				wait (dut_wb_ack_o2);
+			end
 			@(posedge dut_wb_clk_i);
 			#1; 
 			dut_wb_adr_i = 'hz;
 			dut_wb_dat_i = 'hz;
-			dut_wb_cyc_i1 = 0;
+			if(dut == 1) begin
+				dut_wb_cyc_i1 = 0;
+			end else if(dut == 2) begin
+				dut_wb_cyc_i2 = 0;
+			end
 			dut_wb_stb_i = 0;
 			dut_wb_we_i = 'hz;
-			bus_free = 1;
-		end
-		`else
-		begin
-			$display("(%0t) Writing register [%0d] with 0x%0x", $time, reg_addr, reg_data);
-			wait (bus_free);
-			bus_free = 0;
+			`else
 			@(posedge dut_clk);
 			#1;
-			dut_cs1 = 1;
+			if(dut == 1) begin
+				dut_cs1 = 1;
+			end else if(dut == 2) begin
+				dut_cs2 = 1;
+			end
 			@(negedge dut_clk);
 			#1;
 			dut_ale = 1;
@@ -2369,119 +2432,35 @@ module can_testbench();
 			#158;
 			dut_wr = 0;
 			dut_port0_en = 0;
-			dut_cs1 = 0;
+			if(dut == 1) begin
+				dut_cs1 = 0;
+			end else if(dut == 2) begin
+				dut_cs2 = 0;
+			end
+			`endif
+
 			bus_free = 1;
 		end
-		`endif
 	endtask
 
-
-	task read_register2;
+	/* write a register of dut1 */
+	task write_register1;
 		input [7:0] reg_addr;
-		output [7:0] data;
-
-		`ifdef CAN_WISHBONE_IF
+		input [7:0] reg_data;
 		begin
-			wait (bus_free);
-			bus_free = 0;
-			@(posedge dut_wb_clk_i);
-			#1; 
-			dut_wb_adr_i = reg_addr;
-			dut_wb_cyc_i2 = 1;
-			dut_wb_stb_i = 1;
-			dut_wb_we_i = 0;
-			wait (dut_wb_ack_o2);
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, dut_wb_adr_i, dut_wb_dat_o2);
-			data = dut_wb_dat_o2;
-			@(posedge dut_wb_clk_i);
-			#1; 
-			dut_wb_adr_i = 'hz;
-			dut_wb_cyc_i2 = 0;
-			dut_wb_stb_i = 0;
-			dut_wb_we_i = 'hz;
-			bus_free = 1;
+			write_register(1, reg_addr, reg_data);
 		end
-		`else
-		begin
-			wait (bus_free);
-			bus_free = 0;
-			@(posedge dut_clk);
-			#1;
-			dut_cs2 = 1;
-			@(negedge dut_clk);
-			#1;
-			dut_ale = 1;
-			dut_port0_en = 1;
-			dut_port0_o = reg_addr;
-			@(negedge dut_clk);
-			#1;
-			dut_ale = 0;
-			#90;            // 73 - 103 ns
-			dut_port0_en = 0;
-			dut_rd = 1;
-			#158;
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.dut1.addr_latched, dut_port0);
-			data = dut_port0;
-			#1;
-			dut_rd = 0;
-			dut_cs2 = 0;
-			bus_free = 1;
-		end
-		`endif
 	endtask
 
-
+	/* write a register of dut2 */
 	task write_register2;
 		input [7:0] reg_addr;
 		input [7:0] reg_data;
-
-		`ifdef CAN_WISHBONE_IF
 		begin
-			wait (bus_free);
-			bus_free = 0;
-			@(posedge dut_wb_clk_i);
-			#1; 
-			dut_wb_adr_i = reg_addr;
-			dut_wb_dat_i = reg_data;
-			dut_wb_cyc_i2 = 1;
-			dut_wb_stb_i = 1;
-			dut_wb_we_i = 1;
-			wait (dut_wb_ack_o2);
-			@(posedge dut_wb_clk_i);
-			#1; 
-			dut_wb_adr_i = 'hz;
-			dut_wb_dat_i = 'hz;
-			dut_wb_cyc_i2 = 0;
-			dut_wb_stb_i = 0;
-			dut_wb_we_i = 'hz;
-			bus_free = 1;
+			write_register(2, reg_addr, reg_data);
 		end
-		`else
-		begin
-			wait (bus_free);
-			bus_free = 0;
-			@(posedge dut_clk);
-			#1;
-			dut_cs2 = 1;
-			@(negedge dut_clk);
-			#1;
-			dut_ale = 1;
-			dut_port0_en = 1;
-			dut_port0_o = reg_addr;
-			@(negedge dut_clk);
-			#1;
-			dut_ale = 0;
-			#90;            // 73 - 103 ns
-			dut_port0_o = reg_data;
-			dut_wr = 1;
-			#158;
-			dut_wr = 0;
-			dut_port0_en = 0;
-			dut_cs2 = 0;
-			bus_free = 1;
-		end
-		`endif
 	endtask
+
 
 
 	task read_receive_buffer;
@@ -2491,7 +2470,7 @@ module can_testbench();
 			if(extended_mode) begin
 				// Extended mode
 				for (i=8'd16; i<=8'd28; i=i+1) begin
-					read_register(i, tmp_data);
+					read_register1(i, tmp_data);
 				end
 				/*
 				if(can_testbench.dut1.i_can_bsp.i_can_fifo.overrun) begin
@@ -2500,7 +2479,7 @@ module can_testbench();
 				*/
 			end else begin
 				for (i=8'd20; i<=8'd29; i=i+1) begin
-					read_register(i, tmp_data);
+					read_register1(i, tmp_data);
 				end
 				/*
 				if(can_testbench.dut1.i_can_bsp.i_can_fifo.overrun) begin
@@ -2514,7 +2493,7 @@ module can_testbench();
 
 	task release_rx_buffer_command;
 		begin
-			write_register(8'd1, 8'h4);
+			write_register1(8'd1, 8'h4);
 			$display("(%0t) Rx buffer released.", $time);
 		end
 	endtask
@@ -2522,7 +2501,7 @@ module can_testbench();
 
 	task tx_request_command;
 		begin
-			write_register(8'd1, 8'h1);
+			write_register1(8'd1, 8'h1);
 			$display("(%0t) Tx requested.", $time);
 		end
 	endtask
@@ -2530,7 +2509,7 @@ module can_testbench();
 
 	task tx_abort_command;
 		begin
-			write_register(8'd1, 8'h2);
+			write_register1(8'd1, 8'h2);
 			$display("(%0t) Tx abort requested.", $time);
 		end
 	endtask
@@ -2538,7 +2517,7 @@ module can_testbench();
 
 	task clear_data_overrun_command;
 		begin
-			write_register(8'd1, 8'h8);
+			write_register1(8'd1, 8'h8);
 			$display("(%0t) Data overrun cleared.", $time);
 		end
 	endtask
@@ -2546,7 +2525,7 @@ module can_testbench();
 
 	task self_reception_request_command;
 		begin
-			write_register(8'd1, 8'h10);
+			write_register1(8'd1, 8'h10);
 			$display("(%0t) Self reception requested.", $time);
 		end
 	endtask
@@ -2668,12 +2647,12 @@ module can_testbench();
 
 			// Waiting until previous msg is finished before sending another one
 			if(arbitration_lost) begin
-				//  Arbitration lost. Another node is transmitting. We have to wait until it is finished.
+				//  Arbitration lost. Another DUT is transmitting. We have to wait until it is finished.
 				wait ( (~can_testbench.dut1.i_can_bsp.error_frame) & 
 					(~can_testbench.dut1.i_can_bsp.rx_inter   ) & 
 					(~can_testbench.dut1.i_can_bsp.tx_state   ) );
 			end else begin
-				// We were transmitter of the previous frame. No need to wait for another node to finish transmission.
+				// We were transmitter of the previous frame. No need to wait for another DUT to finish transmission.
 				wait ( (~can_testbench.dut1.i_can_bsp.error_frame) & 
 					(~can_testbench.dut1.i_can_bsp.rx_inter   ));
 			end
