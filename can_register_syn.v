@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 module can_register_syn(
 	input wire [WIDTH-1:0] data_in,
 	output reg [WIDTH-1:0] data_out,

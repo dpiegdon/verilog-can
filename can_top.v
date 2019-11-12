@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 `include "can_top_defines.v"
 `include "can_registers.v"
 `include "can_btl.v"
@@ -355,6 +357,8 @@ module can_top(
 	);
 
 
+	/* some interconnect signal from BSP to BTL */
+	wire rx_inter;
 
 	/* Connecting can_btl module */
 	can_btl i_can_btl

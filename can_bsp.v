@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 `include "can_top_defines.v"
 `include "can_crc.v"
 `include "can_acf.v"

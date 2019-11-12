@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 // This module only inverts bit order
 module can_ibo(
 	input wire [7:0] di,

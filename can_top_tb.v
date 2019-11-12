@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 `include "can_top_defines.v"
 `include "can_top_tb_defines.v"
 
@@ -52,80 +54,84 @@ module can_testbench();
 		$dumpvars;
 	end
 
+	reg         dut_clk;
+	wire        dut1_clkout;
+	wire        dut2_clkout;
+	wire        dut1_tx;
+	wire        dut2_tx;
+	wire        dut1_irq;
+	wire        dut2_irq;
+	wire        dut1_bus_off_on;
+	wire        dut2_bus_off_on;
+
+	wire        dut_rx;
+
 	`ifdef CAN_WISHBONE_IF
-	reg         wb_clk_i;
-	reg         wb_rst_i;
-	reg   [7:0] wb_dat_i;
-	wire  [7:0] wb_dat_o;
-	reg         wb_cyc_i;
-	reg         wb_stb_i;
-	reg         wb_we_i;
-	reg   [7:0] wb_adr_i;
-	wire        wb_ack_o;
-	reg         wb_free;
+	reg         dut_wb_clk_i;
+	reg         dut_wb_rst_i;
+	reg   [7:0] dut_wb_dat_i;
+	wire  [7:0] dut_wb_dat_o1;
+	wire  [7:0] dut_wb_dat_o2;
+	reg         dut_wb_cyc_i1;
+	reg         dut_wb_cyc_i2;
+	reg         dut_wb_stb_i;
+	reg         dut_wb_we_i;
+	reg   [7:0] dut_wb_adr_i;
+	wire        dut_wb_ack_o1;
+	wire        dut_wb_ack_o2;
 	`else
-	reg         rst_i;
-	reg         ale_i;
-	reg         rd_i;
-	reg         wr_i;
-	reg         ale2_i;
-	reg         rd2_i;
-	reg         wr2_i;
-	wire  [7:0] port_0;
-	wire  [7:0] port_0_i;
-	reg   [7:0] port_0_o;
-	reg         port_0_en;
-	reg         port_free;
+	reg         dut_rst;
+	reg         dut_ale;
+	reg         dut_rd;
+	reg         dut_wr;
+	reg         dut_cs1;
+	reg         dut_cs2;
+	wire  [7:0] dut_port0;
+	reg   [7:0] dut_port0_o;
+	reg         dut_port0_en;
 	`endif
 
+	reg         bus_free;
 
-	reg         cs_can;
-	reg         cs_can2;
-	reg         clk;
 	reg         rx;
 	wire        tx;
-	wire        tx_i;
-	wire        bus_off_on;
-	wire        irq;
-	wire        clkout;
 
-	wire        rx_and_tx;
-
-	integer     start_tb;
-	reg   [7:0] tmp_data;
 	reg         delayed_tx;
 	reg         tx_bypassed;
+
+	integer     start_tb;
 	reg         extended_mode;
+	reg   [7:0] tmp_data;
 
 	event       igor;
 
 	// Instantiate can_top module
-	can_top i_can_top
+	can_top dut1
 	( 
 		`ifdef CAN_WISHBONE_IF
-		.wb_clk_i(wb_clk_i),
-		.wb_rst_i(wb_rst_i),
-		.wb_dat_i(wb_dat_i),
-		.wb_dat_o(wb_dat_o),
-		.wb_cyc_i(wb_cyc_i),
-		.wb_stb_i(wb_stb_i),
-		.wb_we_i(wb_we_i),
-		.wb_adr_i(wb_adr_i),
-		.wb_ack_o(wb_ack_o),
+		.wb_clk_i(dut_wb_clk_i),
+		.wb_rst_i(dut_wb_rst_i),
+		.wb_dat_i(dut_wb_dat_i),
+		.wb_dat_o(dut_wb_dat_o1),
+		.wb_cyc_i(dut_wb_cyc_i1),
+		.wb_stb_i(dut_wb_stb_i),
+		.wb_we_i(dut_wb_we_i),
+		.wb_adr_i(dut_wb_adr_i),
+		.wb_ack_o(dut_wb_ack_o1),
 		`else
-		.cs_can_i(cs_can),
-		.rst_i(rst_i),
-		.ale_i(ale_i),
-		.rd_i(rd_i),
-		.wr_i(wr_i),
-		.port_0_io(port_0),
+		.cs_can_i(dut_cs1),
+		.rst_i(dut_rst),
+		.ale_i(dut_ale),
+		.rd_i(dut_rd),
+		.wr_i(dut_wr),
+		.port_0_io(dut_port0),
 		`endif
-		.clk_i(clk),
-		.rx_i(rx_and_tx),
-		.tx_o(tx_i),
-		.bus_off_on(bus_off_on),
-		.irq_on(irq),
-		.clkout_o(clkout)
+		.clk_i(dut_clk),
+		.rx_i(dut_rx),
+		.tx_o(dut1_tx),
+		.bus_off_on(dut1_bus_off_on),
+		.irq_on(dut1_irq),
+		.clkout_o(dut1_clkout)
 
 		`ifdef CAN_BIST
 		,
@@ -137,32 +143,32 @@ module can_testbench();
 
 
 	// Instantiate can_top module 2
-	can_top i_can_top2
+	can_top dut2
 	( 
 		`ifdef CAN_WISHBONE_IF
-		.wb_clk_i(wb_clk_i),
-		.wb_rst_i(wb_rst_i),
-		.wb_dat_i(wb_dat_i),
-		.wb_dat_o(wb_dat_o),
-		.wb_cyc_i(wb_cyc_i),
-		.wb_stb_i(wb_stb_i),
-		.wb_we_i(wb_we_i),
-		.wb_adr_i(wb_adr_i),
-		.wb_ack_o(wb_ack_o),
+		.wb_clk_i(dut_wb_clk_i),
+		.wb_rst_i(dut_wb_rst_i),
+		.wb_dat_i(dut_wb_dat_i),
+		.wb_dat_o(dut_wb_dat_o2),
+		.wb_cyc_i(dut_wb_cyc_i2),
+		.wb_stb_i(dut_wb_stb_i),
+		.wb_we_i(dut_wb_we_i),
+		.wb_adr_i(dut_wb_adr_i),
+		.wb_ack_o(dut_wb_ack_o2),
 		`else
-		.cs_can_i(cs_can2),
-		.rst_i(rst_i),
-		.ale_i(ale2_i),
-		.rd_i(rd2_i),
-		.wr_i(wr2_i),
-		.port_0_io(port_0),
+		.cs_can_i(dut_cs2),
+		.rst_i(dut_rst),
+		.ale_i(dut_ale),
+		.rd_i(dut_rd),
+		.wr_i(dut_wr),
+		.port_0_io(dut_port0),
 		`endif
-		.clk_i(clk),
-		.rx_i(rx_and_tx),
-		.tx_o(tx2_i),
-		.bus_off_on(bus_off2_on),
-		.irq_on(),
-		.clkout_o(clkout)
+		.clk_i(dut_clk),
+		.rx_i(dut_rx),
+		.tx_o(dut2_tx),
+		.bus_off_on(dut2_bus_off_on),
+		.irq_on(dut2_irq),
+		.clkout_o(dut2_clkout)
 
 		`ifdef CAN_BIST
 		,
@@ -177,8 +183,8 @@ module can_testbench();
 	wire tx_tmp1;
 	wire tx_tmp2;
 
-	assign tx_tmp1 = bus_off_on?  tx_i  : 1'b1;
-	assign tx_tmp2 = bus_off2_on? tx2_i : 1'b1;
+	assign tx_tmp1 = dut1_bus_off_on ? dut1_tx : 1'b1;
+	assign tx_tmp2 = dut2_bus_off_on ? dut2_tx : 1'b1;
 
 	assign tx = tx_tmp1 & tx_tmp2;
 
@@ -187,61 +193,61 @@ module can_testbench();
 	`ifdef CAN_WISHBONE_IF
 	// Generate wishbone clock signal 10 MHz
 	initial begin
-		wb_clk_i=0;
-		forever #50 wb_clk_i = ~wb_clk_i;
+		dut_wb_clk_i=0;
+		forever #50 dut_wb_clk_i = ~dut_wb_clk_i;
 	end
 	`endif
 
 
 	`ifdef CAN_WISHBONE_IF
 	`else
-	assign port_0_i = port_0;
-	assign port_0 = port_0_en? port_0_o : 8'hz;
+	assign dut_port0 = dut_port0_en? dut_port0_o : 8'hz;
 	`endif
 
 
 	// Generate clock signal 25 MHz
 	// Generate clock signal 16 MHz
 	initial begin
-		clk=0;
-		//forever #20 clk = ~clk;
-		forever #31.25 clk = ~clk;
+		dut_clk=0;
+		//forever #20 dut_clk = ~dut_clk;
+		forever #31.25 dut_clk = ~dut_clk;
 	end
 
 
 	initial begin
 		start_tb = 0;
-		cs_can = 0;
-		cs_can2 = 0;
 		rx = 1;
 		extended_mode = 0;
 		tx_bypassed = 0;
 
 		`ifdef CAN_WISHBONE_IF
-		wb_dat_i = 'hz;
-		wb_cyc_i = 0;
-		wb_stb_i = 0;
-		wb_we_i = 'hz;
-		wb_adr_i = 'hz;
-		wb_free = 1;
-		wb_rst_i = 1;
-		#200 wb_rst_i = 0;
+		dut_wb_dat_i = 'hz;
+		dut_wb_cyc_i1 = 0;
+		dut_wb_cyc_i2 = 0;
+		dut_wb_stb_i = 0;
+		dut_wb_we_i = 'hz;
+		dut_wb_adr_i = 'hz;
+		dut_wb_rst_i = 1;
+		#200 dut_wb_rst_i = 0;
 		#200 start_tb = 1;
 		`else
-		rst_i = 1'b0;
-		ale_i = 1'b0;
-		rd_i  = 1'b0;
-		wr_i  = 1'b0;
-		ale2_i = 1'b0;
-		rd2_i  = 1'b0;
-		wr2_i  = 1'b0;
-		port_0_o = 8'h0;
-		port_0_en = 0;
-		port_free = 1;
-		rst_i = 1;
-		#200 rst_i = 0;
+		dut_rst = 1'b0;
+		dut_ale = 1'b0;
+		dut_rd  = 1'b0;
+		dut_wr  = 1'b0;
+		dut_ale = 1'b0;
+		dut_rd  = 1'b0;
+		dut_wr  = 1'b0;
+		dut_cs1 = 0;
+		dut_cs2 = 0;
+		dut_port0_o = 8'h0;
+		dut_port0_en = 0;
+		dut_rst = 1;
+		#200 dut_rst = 0;
 		#200 start_tb = 1;
 		`endif
+
+		bus_free = 1;
 	end
 
 
@@ -250,15 +256,15 @@ module can_testbench();
 	// Generating delayed tx signal (CAN transciever delay)
 	always begin
 		wait (tx);
-		repeat (2*BRP) @(posedge clk);   // 4 time quants delay
+		repeat (2*BRP) @(posedge dut_clk);   // 4 time quants delay
 		#1 delayed_tx = tx;
 		wait (~tx);
-		repeat (2*BRP) @(posedge clk);   // 4 time quants delay
+		repeat (2*BRP) @(posedge dut_clk);   // 4 time quants delay
 		#1 delayed_tx = tx;
 	end
 
-	//assign rx_and_tx = rx & delayed_tx;   FIX ME !!!
-	assign rx_and_tx = rx & (delayed_tx | tx_bypassed);   // When this signal is on, tx is not looped back to the rx.
+	//assign dut_rx = rx & delayed_tx;   FIX ME !!!
+	assign dut_rx = rx & (delayed_tx | tx_bypassed);   // When this signal is on, tx is not looped back to the rx.
 
 
 	// Main testbench
@@ -307,13 +313,13 @@ module can_testbench();
 		write_register(8'd5, 8'h0f); // acceptance mask
 
 		#10;
-		repeat (1000) @(posedge clk);
+		repeat (1000) @(posedge dut_clk);
 
 		// Switch-off reset mode
 		write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 		write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
-		repeat (BRP) @(posedge clk);   // At least BRP clocks needed before bus goes to dominant level. Otherwise 1 quant difference is possible
+		repeat (BRP) @(posedge dut_clk);   // At least BRP clocks needed before bus goes to dominant level. Otherwise 1 quant difference is possible
 		// This difference is resynchronized later.
 
 		// After exiting the reset mode sending bus free
@@ -475,7 +481,7 @@ module can_testbench();
 
 				begin
 					// Waiting until node 1 starts transmitting
-					wait (!tx_i);
+					wait (!dut1_tx);
 					repeat (33) send_bit(1);
 					repeat (330) send_bit(0);
 					repeat (1) send_bit(1);
@@ -500,7 +506,7 @@ module can_testbench();
 			write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
 
 			// Wait some time before simulation ends
-			repeat (10000) @(posedge clk);
+			repeat (10000) @(posedge dut_clk);
 		end
 	endtask // bus_off_recovery_test
 
@@ -591,7 +597,7 @@ module can_testbench();
 			write_register(8'd4, 8'h28); // acceptance code
 			write_register(8'd5, 8'hff); // acceptance mask
 
-			repeat (100) @(posedge clk);
+			repeat (100) @(posedge dut_clk);
 
 			// Switch-off reset mode
 			//    write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
@@ -931,7 +937,7 @@ module can_testbench();
 			//read_register(8'd14, tmp_data); // rx err cnt
 			//read_register(8'd15, tmp_data); // tx err cnt
 
-			repeat (100) @(posedge clk);
+			repeat (100) @(posedge dut_clk);
 
 			// Switch-off reset mode
 			write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
@@ -1494,22 +1500,22 @@ module can_testbench();
 				end
 
 				begin
-					wait (can_testbench.i_can_top.i_can_bsp.go_tx)        // waiting for tx to start
-					wait (~can_testbench.i_can_top.i_can_bsp.need_to_tx)  // waiting for tx to finish
+					wait (can_testbench.dut1.i_can_bsp.go_tx)        // waiting for tx to start
+					wait (~can_testbench.dut1.i_can_bsp.need_to_tx)  // waiting for tx to finish
 					tx_request_command;                                   // start another tx
 				end
 
 				begin
 					// Transmitting acknowledge (for first packet)
-					wait (can_testbench.i_can_top.i_can_bsp.tx_state & can_testbench.i_can_top.i_can_bsp.rx_ack & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.tx_state & can_testbench.dut1.i_can_bsp.rx_ack & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 0;
-					wait (can_testbench.i_can_top.i_can_bsp.rx_ack_lim & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.rx_ack_lim & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 1;
 
 					// Transmitting acknowledge (for second packet)
-					wait (can_testbench.i_can_top.i_can_bsp.tx_state & can_testbench.i_can_top.i_can_bsp.rx_ack & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.tx_state & can_testbench.dut1.i_can_bsp.rx_ack & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 0;
-					wait (can_testbench.i_can_top.i_can_bsp.rx_ack_lim & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.rx_ack_lim & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 1;
 				end
 			join
@@ -1643,17 +1649,17 @@ module can_testbench();
 
 				begin
 					// Transmitting acknowledge
-					wait (can_testbench.i_can_top.i_can_bsp.tx_state & can_testbench.i_can_top.i_can_bsp.rx_ack & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.tx_state & can_testbench.dut1.i_can_bsp.rx_ack & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 0;
-					wait (can_testbench.i_can_top.i_can_bsp.rx_ack_lim & can_testbench.i_can_top.i_can_bsp.tx_point);
+					wait (can_testbench.dut1.i_can_bsp.rx_ack_lim & can_testbench.dut1.i_can_bsp.tx_point);
 					#1 rx = 1;
 				end
 
 				begin   // Reading irq and arbitration lost capture register
 
 					repeat(1) begin
-						while (~(can_testbench.i_can_top.i_can_bsp.rx_crc_lim & can_testbench.i_can_top.i_can_bsp.sample_point)) begin
-							@(posedge clk);
+						while (~(can_testbench.dut1.i_can_bsp.rx_crc_lim & can_testbench.dut1.i_can_bsp.sample_point)) begin
+							@(posedge dut_clk);
 						end
 
 						// Read irq register
@@ -1665,8 +1671,8 @@ module can_testbench();
 
 
 					repeat(1) begin
-						while (~(can_testbench.i_can_top.i_can_bsp.rx_crc_lim & can_testbench.i_can_top.i_can_bsp.sample_point)) begin
-							@(posedge clk);
+						while (~(can_testbench.dut1.i_can_bsp.rx_crc_lim & can_testbench.dut1.i_can_bsp.sample_point)) begin
+							@(posedge dut_clk);
 						end
 
 						// Read irq register
@@ -1674,8 +1680,8 @@ module can_testbench();
 					end
 
 					repeat(1) begin
-						while (~(can_testbench.i_can_top.i_can_bsp.rx_crc_lim & can_testbench.i_can_top.i_can_bsp.sample_point)) begin
-							@(posedge clk);
+						while (~(can_testbench.dut1.i_can_bsp.rx_crc_lim & can_testbench.dut1.i_can_bsp.sample_point)) begin
+							@(posedge dut_clk);
 						end
 
 						// Read arbitration lost capture register
@@ -2225,13 +2231,13 @@ module can_testbench();
 		begin
 			for (i=0; i<32; i=i+1)
 			begin
-				can_testbench.i_can_top.i_can_bsp.i_can_fifo.length_info[i] = 0;
-				can_testbench.i_can_top.i_can_bsp.i_can_fifo.overrun_info[i] = 0;
+				can_testbench.dut1.i_can_bsp.i_can_fifo.length_info[i] = 0;
+				can_testbench.dut1.i_can_bsp.i_can_fifo.overrun_info[i] = 0;
 			end
 
 			for (i=0; i<64; i=i+1)
 			begin
-				can_testbench.i_can_top.i_can_bsp.i_can_fifo.fifo[i] = 0;
+				can_testbench.dut1.i_can_bsp.i_can_fifo.fifo[i] = 0;
 			end
 
 			$display("(%0t) Fifo initialized", $time);
@@ -2246,8 +2252,8 @@ module can_testbench();
 		begin
 			for (i=start_addr; i<=end_addr; i=i+1)
 			begin
-				$display("len[0x%0x]=0x%0x", i, can_testbench.i_can_top.i_can_bsp.i_can_fifo.length_info[i]);
-				$display("overrun[0x%0x]=0x%0x\n", i, can_testbench.i_can_top.i_can_bsp.i_can_fifo.overrun_info[i]);
+				$display("len[0x%0x]=0x%0x", i, can_testbench.dut1.i_can_bsp.i_can_fifo.length_info[i]);
+				$display("overrun[0x%0x]=0x%0x\n", i, can_testbench.dut1.i_can_bsp.i_can_fifo.overrun_info[i]);
 			end
 		end
 	endtask
@@ -2255,8 +2261,8 @@ module can_testbench();
 
 	task fifo_info;   // Displaying how many packets and how many bytes are in fifo. Not working when wr_info_pointer is smaller than rd_info_pointer.
 		begin
-			$display("(%0t) Currently %0d bytes in fifo (%0d packets)", $time, can_testbench.i_can_top.i_can_bsp.i_can_fifo.fifo_cnt, 
-				(can_testbench.i_can_top.i_can_bsp.i_can_fifo.wr_info_pointer - can_testbench.i_can_top.i_can_bsp.i_can_fifo.rd_info_pointer));
+			$display("(%0t) Currently %0d bytes in fifo (%0d packets)", $time, can_testbench.dut1.i_can_bsp.i_can_fifo.fifo_cnt, 
+				(can_testbench.dut1.i_can_bsp.i_can_fifo.wr_info_pointer - can_testbench.dut1.i_can_bsp.i_can_fifo.rd_info_pointer));
 		end
 	endtask
 
@@ -2267,52 +2273,50 @@ module can_testbench();
 
 		`ifdef CAN_WISHBONE_IF
 		begin
-			wait (wb_free);
-			wb_free = 0;
-			@(posedge wb_clk_i);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			cs_can = 1;
-			wb_adr_i = reg_addr;
-			wb_cyc_i = 1;
-			wb_stb_i = 1;
-			wb_we_i = 0;
-			wait (wb_ack_o);
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, wb_adr_i, wb_dat_o);
-			data = wb_dat_o;
-			@(posedge wb_clk_i);
+			dut_wb_adr_i = reg_addr;
+			dut_wb_cyc_i1 = 1;
+			dut_wb_stb_i = 1;
+			dut_wb_we_i = 0;
+			wait (dut_wb_ack_o1);
+			$display("(%0t) Reading register [%0d] = 0x%0x", $time, dut_wb_adr_i, dut_wb_dat_o1);
+			data = dut_wb_dat_o1;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			wb_adr_i = 'hz;
-			wb_cyc_i = 0;
-			wb_stb_i = 0;
-			wb_we_i = 'hz;
-			cs_can = 0;
-			wb_free = 1;
+			dut_wb_adr_i = 'hz;
+			dut_wb_cyc_i1 = 0;
+			dut_wb_stb_i = 0;
+			dut_wb_we_i = 'hz;
+			bus_free = 1;
 		end
 		`else
 		begin
-			wait (port_free);
-			port_free = 0;
-			@(posedge clk);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_clk);
 			#1;
-			cs_can = 1;
-			@(negedge clk);
+			dut_cs1 = 1;
+			@(negedge dut_clk);
 			#1;
-			ale_i = 1;
-			port_0_en = 1;
-			port_0_o = reg_addr;
-			@(negedge clk);
+			dut_ale = 1;
+			dut_port0_en = 1;
+			dut_port0_o = reg_addr;
+			@(negedge dut_clk);
 			#1;
-			ale_i = 0;
+			dut_ale = 0;
 			#90;            // 73 - 103 ns
-			port_0_en = 0;
-			rd_i = 1;
+			dut_port0_en = 0;
+			dut_rd = 1;
 			#158;
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top.addr_latched, port_0_i);
-			data = port_0_i;
+			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.dut1.addr_latched, dut_port0);
+			data = dut_port0;
 			#1;
-			rd_i = 0;
-			cs_can = 0;
-			port_free = 1;
+			dut_rd = 0;
+			dut_cs1 = 0;
+			bus_free = 1;
 		end
 		`endif
 	endtask
@@ -2324,51 +2328,49 @@ module can_testbench();
 
 		`ifdef CAN_WISHBONE_IF
 		begin
-			wait (wb_free);
-			wb_free = 0;
-			@(posedge wb_clk_i);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			cs_can = 1;
-			wb_adr_i = reg_addr;
-			wb_dat_i = reg_data;
-			wb_cyc_i = 1;
-			wb_stb_i = 1;
-			wb_we_i = 1;
-			wait (wb_ack_o);
-			@(posedge wb_clk_i);
+			dut_wb_adr_i = reg_addr;
+			dut_wb_dat_i = reg_data;
+			dut_wb_cyc_i1 = 1;
+			dut_wb_stb_i = 1;
+			dut_wb_we_i = 1;
+			wait (dut_wb_ack_o1);
+			@(posedge dut_wb_clk_i);
 			#1; 
-			wb_adr_i = 'hz;
-			wb_dat_i = 'hz;
-			wb_cyc_i = 0;
-			wb_stb_i = 0;
-			wb_we_i = 'hz;
-			cs_can = 0;
-			wb_free = 1;
+			dut_wb_adr_i = 'hz;
+			dut_wb_dat_i = 'hz;
+			dut_wb_cyc_i1 = 0;
+			dut_wb_stb_i = 0;
+			dut_wb_we_i = 'hz;
+			bus_free = 1;
 		end
 		`else
 		begin
 			$display("(%0t) Writing register [%0d] with 0x%0x", $time, reg_addr, reg_data);
-			wait (port_free);
-			port_free = 0;
-			@(posedge clk);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_clk);
 			#1;
-			cs_can = 1;
-			@(negedge clk);
+			dut_cs1 = 1;
+			@(negedge dut_clk);
 			#1;
-			ale_i = 1;
-			port_0_en = 1;
-			port_0_o = reg_addr;
-			@(negedge clk);
+			dut_ale = 1;
+			dut_port0_en = 1;
+			dut_port0_o = reg_addr;
+			@(negedge dut_clk);
 			#1;
-			ale_i = 0;
+			dut_ale = 0;
 			#90;            // 73 - 103 ns
-			port_0_o = reg_data;
-			wr_i = 1;
+			dut_port0_o = reg_data;
+			dut_wr = 1;
 			#158;
-			wr_i = 0;
-			port_0_en = 0;
-			cs_can = 0;
-			port_free = 1;
+			dut_wr = 0;
+			dut_port0_en = 0;
+			dut_cs1 = 0;
+			bus_free = 1;
 		end
 		`endif
 	endtask
@@ -2380,52 +2382,50 @@ module can_testbench();
 
 		`ifdef CAN_WISHBONE_IF
 		begin
-			wait (wb_free);
-			wb_free = 0;
-			@(posedge wb_clk_i);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			cs_can = 1;
-			wb_adr_i = reg_addr;
-			wb_cyc_i = 1;
-			wb_stb_i = 1;
-			wb_we_i = 0;
-			wait (wb_ack_o);
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, wb_adr_i, wb_dat_o);
-			data = wb_dat_o;
-			@(posedge wb_clk_i);
+			dut_wb_adr_i = reg_addr;
+			dut_wb_cyc_i2 = 1;
+			dut_wb_stb_i = 1;
+			dut_wb_we_i = 0;
+			wait (dut_wb_ack_o2);
+			$display("(%0t) Reading register [%0d] = 0x%0x", $time, dut_wb_adr_i, dut_wb_dat_o2);
+			data = dut_wb_dat_o2;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			wb_adr_i = 'hz;
-			wb_cyc_i = 0;
-			wb_stb_i = 0;
-			wb_we_i = 'hz;
-			cs_can = 0;
-			wb_free = 1;
+			dut_wb_adr_i = 'hz;
+			dut_wb_cyc_i2 = 0;
+			dut_wb_stb_i = 0;
+			dut_wb_we_i = 'hz;
+			bus_free = 1;
 		end
 		`else
 		begin
-			wait (port_free);
-			port_free = 0;
-			@(posedge clk);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_clk);
 			#1;
-			cs_can2 = 1;
-			@(negedge clk);
+			dut_cs2 = 1;
+			@(negedge dut_clk);
 			#1;
-			ale2_i = 1;
-			port_0_en = 1;
-			port_0_o = reg_addr;
-			@(negedge clk);
+			dut_ale = 1;
+			dut_port0_en = 1;
+			dut_port0_o = reg_addr;
+			@(negedge dut_clk);
 			#1;
-			ale2_i = 0;
+			dut_ale = 0;
 			#90;            // 73 - 103 ns
-			port_0_en = 0;
-			rd2_i = 1;
+			dut_port0_en = 0;
+			dut_rd = 1;
 			#158;
-			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top.addr_latched, port_0_i);
-			data = port_0_i;
+			$display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.dut1.addr_latched, dut_port0);
+			data = dut_port0;
 			#1;
-			rd2_i = 0;
-			cs_can2 = 0;
-			port_free = 1;
+			dut_rd = 0;
+			dut_cs2 = 0;
+			bus_free = 1;
 		end
 		`endif
 	endtask
@@ -2437,50 +2437,48 @@ module can_testbench();
 
 		`ifdef CAN_WISHBONE_IF
 		begin
-			wait (wb_free);
-			wb_free = 0;
-			@(posedge wb_clk_i);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_wb_clk_i);
 			#1; 
-			cs_can = 1;
-			wb_adr_i = reg_addr;
-			wb_dat_i = reg_data;
-			wb_cyc_i = 1;
-			wb_stb_i = 1;
-			wb_we_i = 1;
-			wait (wb_ack_o);
-			@(posedge wb_clk_i);
+			dut_wb_adr_i = reg_addr;
+			dut_wb_dat_i = reg_data;
+			dut_wb_cyc_i2 = 1;
+			dut_wb_stb_i = 1;
+			dut_wb_we_i = 1;
+			wait (dut_wb_ack_o2);
+			@(posedge dut_wb_clk_i);
 			#1; 
-			wb_adr_i = 'hz;
-			wb_dat_i = 'hz;
-			wb_cyc_i = 0;
-			wb_stb_i = 0;
-			wb_we_i = 'hz;
-			cs_can = 0;
-			wb_free = 1;
+			dut_wb_adr_i = 'hz;
+			dut_wb_dat_i = 'hz;
+			dut_wb_cyc_i2 = 0;
+			dut_wb_stb_i = 0;
+			dut_wb_we_i = 'hz;
+			bus_free = 1;
 		end
 		`else
 		begin
-			wait (port_free);
-			port_free = 0;
-			@(posedge clk);
+			wait (bus_free);
+			bus_free = 0;
+			@(posedge dut_clk);
 			#1;
-			cs_can2 = 1;
-			@(negedge clk);
+			dut_cs2 = 1;
+			@(negedge dut_clk);
 			#1;
-			ale2_i = 1;
-			port_0_en = 1;
-			port_0_o = reg_addr;
-			@(negedge clk);
+			dut_ale = 1;
+			dut_port0_en = 1;
+			dut_port0_o = reg_addr;
+			@(negedge dut_clk);
 			#1;
-			ale2_i = 0;
+			dut_ale = 0;
 			#90;            // 73 - 103 ns
-			port_0_o = reg_data;
-			wr2_i = 1;
+			dut_port0_o = reg_data;
+			dut_wr = 1;
 			#158;
-			wr2_i = 0;
-			port_0_en = 0;
-			cs_can2 = 0;
-			port_free = 1;
+			dut_wr = 0;
+			dut_port0_en = 0;
+			dut_cs2 = 0;
+			bus_free = 1;
 		end
 		`endif
 	endtask
@@ -2496,7 +2494,7 @@ module can_testbench();
 					read_register(i, tmp_data);
 				end
 				/*
-				if(can_testbench.i_can_top.i_can_bsp.i_can_fifo.overrun) begin
+				if(can_testbench.dut1.i_can_bsp.i_can_fifo.overrun) begin
 					$display("\nWARNING: Above packet was received with overrun.");
 				end
 				*/
@@ -2505,7 +2503,7 @@ module can_testbench();
 					read_register(i, tmp_data);
 				end
 				/*
-				if(can_testbench.i_can_top.i_can_bsp.i_can_fifo.overrun) begin
+				if(can_testbench.dut1.i_can_bsp.i_can_fifo.overrun) begin
 					$display("\nWARNING: Above packet was received with overrun.");
 				end
 				*/
@@ -2558,38 +2556,38 @@ module can_testbench();
 		begin
 			// Hard synchronization
 			#1 rx=0;
-			repeat (2*BRP) @(posedge clk);
-			repeat (8*BRP) @(posedge clk);
+			repeat (2*BRP) @(posedge dut_clk);
+			repeat (8*BRP) @(posedge dut_clk);
 			#1 rx=1;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 
 			// Resynchronization on time
 			#1 rx=0;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 			#1 rx=1;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 
 			// Resynchronization late
-			repeat (BRP) @(posedge clk);
-			repeat (BRP) @(posedge clk);
+			repeat (BRP) @(posedge dut_clk);
+			repeat (BRP) @(posedge dut_clk);
 			#1 rx=0;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 			#1 rx=1;
 
 			// Resynchronization early
-			repeat (8*BRP) @(posedge clk);   // two frames too early
+			repeat (8*BRP) @(posedge dut_clk);   // two frames too early
 			#1 rx=0;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 			#1 rx=1;
 			// Resynchronization early
-			repeat (11*BRP) @(posedge clk);   // one frames too late
+			repeat (11*BRP) @(posedge dut_clk);   // one frames too late
 			#1 rx=0;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 			#1 rx=1;
 
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 			#1 rx=0;
-			repeat (10*BRP) @(posedge clk);
+			repeat (10*BRP) @(posedge dut_clk);
 		end
 	endtask
 
@@ -2599,7 +2597,7 @@ module can_testbench();
 		integer cnt;
 		begin
 			#1 rx=bit;
-			repeat ((`CAN_TIMING1_TSEG1 + `CAN_TIMING1_TSEG2 + 3)*BRP) @(posedge clk);
+			repeat ((`CAN_TIMING1_TSEG1 + `CAN_TIMING1_TSEG2 + 3)*BRP) @(posedge dut_clk);
 		end
 	endtask
 
@@ -2671,13 +2669,13 @@ module can_testbench();
 			// Waiting until previous msg is finished before sending another one
 			if(arbitration_lost) begin
 				//  Arbitration lost. Another node is transmitting. We have to wait until it is finished.
-				wait ( (~can_testbench.i_can_top.i_can_bsp.error_frame) & 
-					(~can_testbench.i_can_top.i_can_bsp.rx_inter   ) & 
-					(~can_testbench.i_can_top.i_can_bsp.tx_state   ) );
+				wait ( (~can_testbench.dut1.i_can_bsp.error_frame) & 
+					(~can_testbench.dut1.i_can_bsp.rx_inter   ) & 
+					(~can_testbench.dut1.i_can_bsp.tx_state   ) );
 			end else begin
 				// We were transmitter of the previous frame. No need to wait for another node to finish transmission.
-				wait ( (~can_testbench.i_can_top.i_can_bsp.error_frame) & 
-					(~can_testbench.i_can_top.i_can_bsp.rx_inter   ));
+				wait ( (~can_testbench.dut1.i_can_bsp.error_frame) & 
+					(~can_testbench.dut1.i_can_bsp.rx_inter   ));
 			end
 			arbitration_lost = 0;
 
@@ -2719,14 +2717,14 @@ module can_testbench();
 
 				begin
 					while (mode ? (cnt<32) : (cnt<12)) begin
-						#1 wait (can_testbench.i_can_top.sample_point);
+						#1 wait (can_testbench.dut1.sample_point);
 						if(mode) begin
-							if(cnt<32 & tmp & (~rx_and_tx)) begin
+							if(cnt<32 & tmp & (~dut_rx)) begin
 								arbitration_lost = 1;
 								rx = 1;       // Only recessive is send from now on.
 							end
 						end else begin
-							if(cnt<12 & tmp & (~rx_and_tx)) begin
+							if(cnt<12 & tmp & (~dut_rx)) begin
 								arbitration_lost = 1;
 								rx = 1;       // Only recessive is send from now on.
 							end
@@ -2742,19 +2740,19 @@ module can_testbench();
 
 
 	// State machine monitor (btl)
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_btl.go_sync & can_testbench.i_can_top.i_can_btl.go_seg1
-			| can_testbench.i_can_top.i_can_btl.go_sync & can_testbench.i_can_top.i_can_btl.go_seg2
-			| can_testbench.i_can_top.i_can_btl.go_seg1 & can_testbench.i_can_top.i_can_btl.go_seg2) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_btl.go_sync & can_testbench.dut1.i_can_btl.go_seg1
+			| can_testbench.dut1.i_can_btl.go_sync & can_testbench.dut1.i_can_btl.go_seg2
+			| can_testbench.dut1.i_can_btl.go_seg1 & can_testbench.dut1.i_can_btl.go_seg2) begin
 
 			$display("(%0t) ERROR multiple go_sync, go_seg1 or go_seg2 occurance\n\n", $time);
 			#1000;
 			$stop;
 		end
 
-		if(can_testbench.i_can_top.i_can_btl.sync & can_testbench.i_can_top.i_can_btl.seg1
-			| can_testbench.i_can_top.i_can_btl.sync & can_testbench.i_can_top.i_can_btl.seg2
-			| can_testbench.i_can_top.i_can_btl.seg1 & can_testbench.i_can_top.i_can_btl.seg2) begin
+		if(can_testbench.dut1.i_can_btl.sync & can_testbench.dut1.i_can_btl.seg1
+			| can_testbench.dut1.i_can_btl.sync & can_testbench.dut1.i_can_btl.seg2
+			| can_testbench.dut1.i_can_btl.seg1 & can_testbench.dut1.i_can_btl.seg2) begin
 
 			$display("(%0t) ERROR multiple sync, seg1 or seg2 occurance\n\n", $time);
 			#1000;
@@ -2763,8 +2761,8 @@ module can_testbench();
 	end
 
 	/* stuff_error monitor (bsp)
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.stuff_error) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.stuff_error) begin
 			$display("\n\n(%0t) Stuff error occured in can_bsp.v file\n\n", $time);
 			$stop;                                      After everything is finished add another condition (something like & (~idle)) and enable stop
 		end
@@ -2773,12 +2771,12 @@ module can_testbench();
 
 	//
 	// CRC monitor (used until proper CRC generation is used in testbench
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.rx_ack       &
-			can_testbench.i_can_top.i_can_bsp.sample_point & 
-			can_testbench.i_can_top.i_can_bsp.crc_err) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.rx_ack       &
+			can_testbench.dut1.i_can_bsp.sample_point & 
+			can_testbench.dut1.i_can_bsp.crc_err) begin
 
-			$display("*E (%0t) ERROR: CRC error (Calculated crc = 0x%0x, crc_in = 0x%0x)", $time, can_testbench.i_can_top.i_can_bsp.calculated_crc, can_testbench.i_can_top.i_can_bsp.crc_in);
+			$display("*E (%0t) ERROR: CRC error (Calculated crc = 0x%0x, crc_in = 0x%0x)", $time, can_testbench.dut1.i_can_bsp.calculated_crc, can_testbench.dut1.i_can_bsp.crc_in);
 		end
 	end
 
@@ -2788,9 +2786,9 @@ module can_testbench();
 
 	/*
 	// overrun monitor
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.i_can_fifo.wr
-			& can_testbench.i_can_top.i_can_bsp.i_can_fifo.fifo_full) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.i_can_fifo.wr
+			& can_testbench.dut1.i_can_bsp.i_can_fifo.fifo_full) begin
 
 			$display("(%0t)overrun", $time);
 		end
@@ -2799,8 +2797,8 @@ module can_testbench();
 
 
 	// form error monitor
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.form_err) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.form_err) begin
 			$display("*E (%0t) ERROR: form_error", $time);
 		end
 	end
@@ -2808,16 +2806,16 @@ module can_testbench();
 
 
 	// acknowledge error monitor
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.ack_err) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.ack_err) begin
 			$display("*E (%0t) ERROR: acknowledge_error", $time);
 		end
 	end
 
 	/*
 	// bit error monitor
-	always @(posedge clk) begin
-		if(can_testbench.i_can_top.i_can_bsp.bit_err) begin
+	always @(posedge dut_clk) begin
+		if(can_testbench.dut1.i_can_bsp.bit_err) begin
 			$display("*E (%0t) ERROR: bit_error", $time);
 		end
 	end

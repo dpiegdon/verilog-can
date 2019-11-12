@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 /*
  *  Uncomment following line if you want to use WISHBONE interface. Otherwise
  * 8051 interface is used.

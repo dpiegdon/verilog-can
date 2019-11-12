@@ -39,6 +39,8 @@
  * a CAN protocol license from Bosch.
  */
 
+`default_nettype none
+
 module can_crc(
 	input wire clk,
 	input wire data,
