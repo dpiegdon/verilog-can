@@ -46,30 +46,24 @@
 `include "can_btl.v"
 `include "can_bsp.v"
 
-module can_top(
-	`ifdef CAN_WISHBONE_IF
-	input wire wb_clk_i,
-	input wire wb_rst_i,
-	input wire [7:0] wb_dat_i,
-	output wire [7:0] wb_dat_o,
-	input wire wb_cyc_i,
-	input wire wb_stb_i,
-	input wire wb_we_i,
-	input wire [7:0] wb_adr_i,
-	output reg wb_ack_o,
-	`else
+/*
+ * Internal CAN controller implementation,
+ * without an explicit bus adapter.
+ */
+
+module can_controller(
 	input wire rst_i,
-	input wire ale_i,
-	input wire rd_i,
-	input wire wr_i,
-	inout wire [7:0] port_0_io,
-	input wire cs_can_i,
-	`endif
+	input wire cs_i,
+	input wire we_i,
+	input wire [7:0] addr_i,
+	input wire [7:0] data_i,
+	output reg [7:0] data_o,
+
 	input wire clk_i,
 	input wire rx_i,
 	output wire tx_o,
-	output wire bus_off_on,
-	output wire irq_on,
+	output wire bus_off_on_o,
+	output wire irq_n_o,
 	output wire clkout_o
 
 	`ifdef CAN_BIST
@@ -82,29 +76,10 @@ module can_top(
 
 	parameter Tp = 1;
 
-
-	`ifdef CAN_WISHBONE_IF
-	reg          cs_sync1;
-	reg          cs_sync2;
-	reg          cs_sync3;
-
-	reg          cs_ack1;
-	reg          cs_ack2;
-	reg          cs_ack3;
-	reg          cs_sync_rst1;
-	reg          cs_sync_rst2;
-	wire         cs_can_i;
-	`else
-	reg    [7:0] addr_latched;
-	reg          wr_i_q;
-	reg          rd_i_q;
-	`endif
-
 	reg          data_out_fifo_selected;
 
 	wire   [7:0] data_out_fifo;
 	wire   [7:0] data_out_regs;
-
 
 	/* Mode register */
 	wire         reset_mode;
@@ -122,7 +97,6 @@ module can_top(
 	wire         tx_state_q;
 	wire         overload_request;
 	wire         overload_frame;
-
 
 	/* Arbitration Lost Capture Register */
 	wire         read_arbitration_lost_capture_reg;
@@ -160,7 +134,6 @@ module can_top(
 	wire   [7:0] acceptance_mask_0;
 	/* End: This section is for BASIC and EXTENDED mode */
 
-
 	/* This section is for EXTENDED mode */
 	/* Acceptance code register */
 	wire   [7:0] acceptance_code_1;
@@ -188,8 +161,6 @@ module can_top(
 	wire   [7:0] tx_data_11;
 	wire   [7:0] tx_data_12;
 	/* End: Tx data registers */
-
-	wire         cs;
 
 	/* Output signals from can_btl module */
 	wire         sample_point;
@@ -230,27 +201,20 @@ module can_top(
 	wire         go_tx;
 	wire         send_ack;
 
-	wire         rst;
-	wire         we;
-	wire   [7:0] addr;
-	wire   [7:0] data_in;
-	reg    [7:0] data_out;
 	reg          rx_sync_tmp;
 	reg          rx_sync;
-
-
 
 	/* Connecting can_registers module */
 	can_registers i_can_registers
 	(
 		.clk(clk_i),
-		.rst(rst),
-		.cs(cs),
-		.we(we),
-		.addr(addr),
-		.data_in(data_in),
+		.rst(rst_i),
+		.cs(cs_i),
+		.we(we_i),
+		.addr(addr_i),
+		.data_in(data_i),
 		.data_out(data_out_regs),
-		.irq_n(irq_on),
+		.irq_n(irq_n_o),
 
 		.sample_point(sample_point),
 		.transmitting(transmitting),
@@ -356,7 +320,6 @@ module can_top(
 		/* End: Tx data registers */
 	);
 
-
 	/* some interconnect signal from BSP to BTL */
 	wire rx_inter;
 
@@ -364,7 +327,7 @@ module can_top(
 	can_btl i_can_btl
 	(
 		.clk(clk_i),
-		.rst(rst),
+		.rst(rst_i),
 		.rx(rx_sync),
 		.tx(tx_o),
 
@@ -400,12 +363,10 @@ module can_top(
 		.node_error_passive(node_error_passive)
 	);
 
-
-
 	can_bsp i_can_bsp
 	(
 		.clk(clk_i),
-		.rst(rst),
+		.rst(rst_i),
 
 		/* From btl module */
 		.sample_point(sample_point),
@@ -414,8 +375,8 @@ module can_top(
 		.tx_point(tx_point),
 		.hard_sync(hard_sync),
 
-		.addr(addr),
-		.data_in(data_in),
+		.addr(addr_i),
+		.data_in(data_i),
 		.data_out(data_out_fifo),
 		.fifo_selected(data_out_fifo_selected),
 
@@ -519,7 +480,7 @@ module can_top(
 		/* Tx signal */
 		.tx(tx_o),
 		.tx_next(tx_next),
-		.bus_off_on(bus_off_on),
+		.bus_off_on(bus_off_on_o),
 
 		.go_overload_frame(go_overload_frame),
 		.go_error_frame(go_error_frame),
@@ -534,12 +495,10 @@ module can_top(
 		`endif
 	);
 
-
-
 	// Multiplexing wb_dat_o from registers and rx fifo
-	always @(extended_mode or addr or reset_mode) begin
-		if(extended_mode & (~reset_mode) & ((addr >= 8'd16) && (addr <= 8'd28))
-			| (~extended_mode) & ((addr >= 8'd20) && (addr <= 8'd29))) begin
+	always @(extended_mode or addr_i or reset_mode) begin
+		if(extended_mode & (~reset_mode) & ((addr_i >= 8'd16) && (addr_i <= 8'd28))
+			| (~extended_mode) & ((addr_i >= 8'd20) && (addr_i <= 8'd29))) begin
 
 			data_out_fifo_selected = 1'b1;
 		end else begin
@@ -547,20 +506,18 @@ module can_top(
 		end
 	end
 
-
 	always @(posedge clk_i) begin
-		if(cs & (~we)) begin
+		if(cs_i & (~we_i)) begin
 			if(data_out_fifo_selected) begin
-				data_out <=#Tp data_out_fifo;
+				data_o <=#Tp data_out_fifo;
 			end else begin
-				data_out <=#Tp data_out_regs;
+				data_o <=#Tp data_out_regs;
 			end
 		end
 	end
 
-
-	always @(posedge clk_i or posedge rst) begin
-		if(rst) begin
+	always @(posedge clk_i or posedge rst_i) begin
+		if(rst_i) begin
 			rx_sync_tmp <= 1'b1;
 			rx_sync     <= 1'b1;
 		end else begin
@@ -569,21 +526,62 @@ module can_top(
 		end
 	end
 
+endmodule
 
-	`ifdef CAN_WISHBONE_IF
 
-	assign cs_can_i = 1'b1;
+/*
+ * CAN controller connected to a wishbone bus
+ */
+module can_wishbone_top(
+	input wire wb_clk_i,
+	input wire wb_rst_i,
+	input wire [7:0] wb_dat_i,
+	output wire [7:0] wb_dat_o,
+	input wire wb_cyc_i,
+	input wire wb_stb_i,
+	input wire wb_we_i,
+	input wire [7:0] wb_adr_i,
+	output reg wb_ack_o,
 
-	// Combining wb_cyc_i and wb_stb_i signals to cs signal. Than synchronizing to clk_i clock domain.
-	always @(posedge clk_i or posedge rst) begin
-		if(rst) begin
+	input wire clk_i,
+	input wire rx_i,
+	output wire tx_o,
+	output wire bus_off_on_o,
+	output wire irq_n_o,
+	output wire clkout_o
+
+	`ifdef CAN_BIST
+	,
+	input wire mbist_si_i, // bist scan serial in
+	output wire mbist_so_o, // bist scan serial out
+	input wire [`CAN_MBIST_CTRL_WIDTH - 1:0] mbist_ctrl_i // bist chain shift control
+	`endif
+	);
+
+	parameter Tp = 1;
+
+	reg          cs_sync1;
+	reg          cs_sync2;
+	reg          cs_sync3;
+
+	reg          cs_ack1;
+	reg          cs_ack2;
+	reg          cs_ack3;
+	reg          cs_sync_rst1;
+	reg          cs_sync_rst2;
+	wire         cs_can = cs_sync2 & (~cs_sync3);
+
+
+	// Combine wb_cyc_i and wb_stb_i signals to cs signal, then sync to clk_i clock domain.
+	always @(posedge clk_i or posedge wb_rst_i) begin
+		if(wb_rst_i) begin
 			cs_sync1     <= 1'b0;
 			cs_sync2     <= 1'b0;
 			cs_sync3     <= 1'b0;
 			cs_sync_rst1 <= 1'b0;
 			cs_sync_rst2 <= 1'b0;
 		end else begin
-			cs_sync1     <=#Tp wb_cyc_i & wb_stb_i & (~cs_sync_rst2) & cs_can_i;
+			cs_sync1     <=#Tp wb_cyc_i & wb_stb_i & (~cs_sync_rst2);
 			cs_sync2     <=#Tp cs_sync1            & (~cs_sync_rst2);
 			cs_sync3     <=#Tp cs_sync2            & (~cs_sync_rst2);
 			cs_sync_rst1 <=#Tp cs_ack3;
@@ -591,56 +589,180 @@ module can_top(
 		end
 	end
 
-	assign cs = cs_sync2 & (~cs_sync3);
-
+	// Generate bus signals
 	always @(posedge wb_clk_i) begin
 		cs_ack1 <=#Tp cs_sync3;
 		cs_ack2 <=#Tp cs_ack1;
 		cs_ack3 <=#Tp cs_ack2;
-	end
-
-	// Generating acknowledge signal
-	always @(posedge wb_clk_i) begin
 		wb_ack_o <=#Tp (cs_ack2 & (~cs_ack3));
 	end
 
-	assign rst      = wb_rst_i;
-	assign we       = wb_we_i;
-	assign addr     = wb_adr_i;
-	assign data_in  = wb_dat_i;
-	assign wb_dat_o = data_out;
+	can_controller #(.Tp(Tp)) can_controller(
+		.rst_i(wb_rst_i),
+		.cs_i(cs_can),
+		.we_i(wb_we_i),
+		.addr_i(wb_adr_i),
+		.data_i(wb_dat_i),
+		.data_o(wb_dat_o),
 
-	`else
+		.clk_i(clk_i),
+		.rx_i(rx_i),
+		.tx_o(tx_o),
+		.bus_off_on_o(bus_off_on_o),
+		.irq_n_o(irq_n_o),
+		.clkout_o(clkout_o)
 
-	// Latching address
-	always @(posedge clk_i or posedge rst) begin
-		if(rst) begin
+		`ifdef CAN_BIST
+		,
+		.mbist_si_i(mbist_si_i),
+		.mbist_so_o(mbist_so_o),
+		.mbist_ctrl_i(mbist_ctrl_i)
+		`endif
+		);
+
+endmodule
+
+
+/*
+ * CAN controller connected to an 8051 bus.
+ * Output enable signal is provided for data bus output signals.
+ */
+module can_8051_top(
+	input wire rst_i,
+	input wire cs_can_i,
+	input wire ale_i,
+	input wire rd_i,
+	input wire wr_i,
+	input wire [7:0] port_0_i,
+	output wire [7:0] port_0_o,
+	output wire port_0_oe,
+
+	input wire clk_i,
+	input wire rx_i,
+	output wire tx_o,
+	output wire bus_off_on_o,
+	output wire irq_n_o,
+	output wire clkout_o
+
+	`ifdef CAN_BIST
+	,
+	input wire mbist_si_i, // bist scan serial in
+	output wire mbist_so_o, // bist scan serial out
+	input wire [`CAN_MBIST_CTRL_WIDTH - 1:0] mbist_ctrl_i // bist chain shift control
+	`endif
+	);
+
+	parameter Tp = 1;
+
+	reg    [7:0] addr_latched;
+	reg          wr_i_q;
+	reg          rd_i_q;
+
+	// Latching of bus signals
+	always @(posedge clk_i or posedge rst_i) begin
+		if(rst_i) begin
 			addr_latched <= 8'h0;
-		end else if(ale_i) begin
-			addr_latched <=#Tp port_0_io;
-		end
-	end
-
-
-	// Generating delayed wr_i and rd_i signals
-	always @(posedge clk_i or posedge rst) begin
-		if(rst) begin
 			wr_i_q <= 1'b0;
 			rd_i_q <= 1'b0;
-		end else begin
+		end else if(ale_i) begin
+			addr_latched <=#Tp port_0_i;
 			wr_i_q <=#Tp wr_i;
 			rd_i_q <=#Tp rd_i;
 		end
 	end
 
-	assign cs = ((wr_i & (~wr_i_q)) | (rd_i & (~rd_i_q))) & cs_can_i;
+	wire cs = ((wr_i & (~wr_i_q)) | (rd_i & (~rd_i_q))) & cs_can_i;
 
-	assign rst       = rst_i;
-	assign we        = wr_i;
-	assign addr      = addr_latched;
-	assign data_in   = port_0_io;
-	assign port_0_io = (cs_can_i & rd_i)? data_out : 8'hz;
+	assign port_0_oe = cs_can_i & rd_i;
 
-	`endif
+	can_controller can_controller(
+		.rst_i(rst_i),
+		.cs_i(cs),
+		.we_i(wr_i),
+		.addr_i(addr_latched),
+		.data_i(port_0_i),
+		.data_o(port_0_o),
+
+		.clk_i(clk_i),
+		.rx_i(rx_i),
+		.tx_o(tx_o),
+		.bus_off_on_o(bus_off_on_o),
+		.irq_n_o(irq_n_o),
+		.clkout_o(clkout_o)
+
+		`ifdef CAN_BIST
+		,
+		.mbist_si_i(mbist_si_i),
+		.mbist_so_o(mbist_so_o),
+		.mbist_ctrl_i(mbist_ctrl_i)
+		`endif
+		);
 
 endmodule
+
+
+/*
+ * CAN controller connected to an 8051 bus.
+ * Data lines are shared between input and output;
+ * outputs thus can be tri-stated.
+ *
+ * This is the original 8051 interface provided by earlier versions of this
+ * core.
+ */
+module can_8051_tristate_top(
+	input wire rst_i,
+	input wire ale_i,
+	input wire rd_i,
+	input wire wr_i,
+	inout wire [7:0] port_0_io,
+	input wire cs_can_i,
+
+	input wire clk_i,
+	input wire rx_i,
+	output wire tx_o,
+	output wire bus_off_on_o,
+	output wire irq_n_o,
+	output wire clkout_o
+
+	`ifdef CAN_BIST
+	,
+	input wire mbist_si_i, // bist scan serial in
+	output wire mbist_so_o, // bist scan serial out
+	input wire [`CAN_MBIST_CTRL_WIDTH - 1:0] mbist_ctrl_i // bist chain shift control
+	`endif
+	);
+
+	parameter Tp = 1;
+
+	wire [7:0] port_0_o;
+	wire port_0_oe;
+
+	assign port_0_io = (port_0_oe) ? port_0_o : 8'hz;
+
+	can_8051_top #(.Tp(Tp)) can_8051(
+		.rst_i(rst_i),
+		.ale_i(ale_i),
+		.rd_i(rd_i),
+		.wr_i(wr_i),
+		.port_0_i(port_0_io),
+		.port_0_o(port_0_o),
+		.port_0_oe(port_0_oe),
+		.cs_can_i(cs_can_i),
+
+		.clk_i(clk_i),
+		.rx_i(rx_i),
+		.tx_o(tx_o),
+		.bus_off_on_o(bus_off_on_o),
+		.irq_n_o(irq_n_o),
+		.clkout_o(clkout_o)
+
+		`ifdef CAN_BIST
+		,
+		.mbist_si_i(mbist_si_i),
+		.mbist_so_o(mbist_so_o),
+		.mbist_ctrl_i(mbist_ctrl_i)
+		`endif
+	);
+
+endmodule
+
