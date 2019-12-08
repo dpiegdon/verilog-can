@@ -495,7 +495,7 @@ module can_controller(
 		`endif
 	);
 
-	// Multiplexing wb_dat_o from registers and rx fifo
+	// Multiplexing registers and rx fifo into data_o
 	always @(extended_mode or addr_i or reset_mode) begin
 		if(extended_mode & (~reset_mode) & ((addr_i >= 8'd16) && (addr_i <= 8'd28))
 			| (~extended_mode) & ((addr_i >= 8'd20) && (addr_i <= 8'd29))) begin
@@ -560,26 +560,26 @@ module can_wishbone_top(
 
 	parameter Tp = 1;
 
-	reg          cs_sync1;
-	reg          cs_sync2;
-	reg          cs_sync3;
+	reg          cs_sync1 = 0;
+	reg          cs_sync2 = 0;
+	reg          cs_sync3 = 0;
 
-	reg          cs_ack1;
-	reg          cs_ack2;
-	reg          cs_ack3;
-	reg          cs_sync_rst1;
-	reg          cs_sync_rst2;
+	reg          cs_ack1 = 0;
+	reg          cs_ack2 = 0;
+	reg          cs_ack3 = 0;
+	reg          cs_sync_rst1 = 0;
+	reg          cs_sync_rst2 = 0;
 	wire         cs_can = cs_sync2 & (~cs_sync3);
 
 
 	// Combine wb_cyc_i and wb_stb_i signals to cs signal, then sync to clk_i clock domain.
 	always @(posedge clk_i or posedge wb_rst_i) begin
 		if(wb_rst_i) begin
-			cs_sync1     <= 1'b0;
-			cs_sync2     <= 1'b0;
-			cs_sync3     <= 1'b0;
-			cs_sync_rst1 <= 1'b0;
-			cs_sync_rst2 <= 1'b0;
+			cs_sync1 <= 0;
+			cs_sync2 <= 0;
+			cs_sync3 <= 0;
+			cs_sync_rst1 <= 0;
+			cs_sync_rst2 <= 0;
 		end else begin
 			cs_sync1     <=#Tp wb_cyc_i & wb_stb_i & (~cs_sync_rst2);
 			cs_sync2     <=#Tp cs_sync1            & (~cs_sync_rst2);

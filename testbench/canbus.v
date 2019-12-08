@@ -3,17 +3,12 @@
  * This file is part of a verilog CAN controller that is SJA1000 compatible.
  *
  * Authors:
- *   * Igor Mohor <igorm@opencores.org>
- *       Author of the original version at
- *       http://www.opencores.org/projects/can/
- *       (which has been unmaintained since about 2009)
- *
  *   * David Piegdon <dgit@piegdon.de>
  *       Picked up project for cleanup and bugfixes in 2019
  *
  * Any additional information is available in the LICENSE file.
  *
- * Copyright (C) 2002, 2003, 2004, 2019 Authors
+ * Copyright (C) 2019 Authors
  *
  * This source file may be used and distributed without restriction provided
  * that this copyright statement is not removed from the file and that any
@@ -41,23 +36,40 @@
 
 `default_nettype none
 
-`timescale 1ns/10ps
+module simulated_can_bus(input wire [N-1:0] tx, output wire [N-1:0] rx);
+	/*
+	 * tx bit '1' equals to 0V = can_hi - can_low (recessive)
+	 * tx bit '0' equals to 5V = can_hi - can_low (dominant)
+	 *
+	 * this is a simple CAN bus simulator that merges N devices on a bus,
+	 * where each device has a transmission delay of #delay from to each
+	 * other device.
+	 */
 
-/* Mode register */
-`define CAN_MODE_RESET                  1'h1    /* Reset mode */
+	parameter N=2; // number of devices on bus
+	parameter delay=0; // delay from any one to another node
 
-/* Bit Timing 0 register value */
-//`define CAN_TIMING0_BRP                 6'h0    /* Baud rate prescaler (2*(value+1)) */
-//`define CAN_TIMING0_SJW                 2'h2    /* SJW (value+1) */
+	wire [N-1:0] delayed_tx;
+	wand [N-1:0] merged_tx;
 
-`define CAN_TIMING0_BRP                 6'h3    /* Baud rate prescaler (2*(value+1)) */
-`define CAN_TIMING0_SJW                 2'h1    /* SJW (value+1) */
+	generate
+		genvar rxn;
+		genvar txn;
+		for(rxn = 0; rxn < N; rxn=rxn+1) begin
 
-/* Bit Timing 1 register value */
-//`define CAN_TIMING1_TSEG1               4'h4    /* TSEG1 segment (value+1) */
-//`define CAN_TIMING1_TSEG2               3'h3    /* TSEG2 segment (value+1) */
-//`define CAN_TIMING1_SAM                 1'h0    /* Triple sampling */
+			assign #delay delayed_tx[rxn] = tx[rxn];
 
-`define CAN_TIMING1_TSEG1               4'hf    /* TSEG1 segment (value+1) */
-`define CAN_TIMING1_TSEG2               3'h2    /* TSEG2 segment (value+1) */
-`define CAN_TIMING1_SAM                 1'h0    /* Triple sampling */
+			for(txn = 0; txn < N; txn=txn+1) begin
+				if(rxn == txn) begin
+					assign merged_tx[rxn] = tx[txn];
+				end else begin
+					assign merged_tx[rxn] = delayed_tx[txn];
+				end
+			end
+
+			assign rx[rxn] = merged_tx[rxn];
+		end
+	endgenerate
+
+endmodule
+

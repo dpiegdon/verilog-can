@@ -36,76 +36,18 @@
 
 `default_nettype none
 
-`timescale 1ns/10ps
+module test_acceptance_filter(output reg finished, output reg [15:0] errors);
+	/*
+	 * test acceptance filter when receiving frames.
+	 */
 
-`include "testbench/canbus.v"
-`include "testbench/test_rx_tx.v"
-`include "testbench/test_acceptance_filter.v"
-
-module can_top_tb();
+	`include "testbench/fixture.inc"
+	`include "testbench/tasks.inc"
 
 	initial begin
-		$dumpfile("can_top_tb.vcd");
-		$dumpvars;
-	end
-
-	localparam TESTCOUNT=2;
-
-	wire [TESTCOUNT-1:0] subtest_finished;
-	wire [15:0] subtest_errors[TESTCOUNT-1:0];
-
-	// instantiate all sub-tests
-	test_tx_rx test_tx_rx(subtest_finished[0], subtest_errors[0]);
-	test_acceptance_filter test_acceptance_filter(subtest_finished[1], subtest_errors[1]);
-	// to be ported:
-	//	test_synchronization
-	//	test_empty_fifo_ext
-	//	test_full_fifo_ext
-	//	send_frame_ext
-	//	test_empty_fifo
-	//	test_full_fifo
-	//	test_reset_mode
-	//	bus_off_test
-	//	forced_bus_off
-	//	send_frame_basic
-	//	send_frame_extended
-	//	self_reception_request
-	//	manual_frame_basic
-	//	manual_frame_ext
-	//	error_test
-	//	register_test
-	//	bus_off_recovery_test;
-	// new:
-	//	test_baudrate
-	//	test_arbitration_loss
-
-
-	// collect output
-	wire finished = &(subtest_finished);
-	integer errors;
-	integer i;
-
-	always begin
-		#1;
-
-		wait(finished);
-		#500;
-
 		errors = 0;
-		for(i = 0; i < TESTCOUNT; i = i+1) begin
-			errors = errors + subtest_errors[i];
-		end
-
-		$display("%1d subtests completed.", TESTCOUNT);
-
-		if(errors) begin
-			$error("FAIL: collected %d errors", errors);
-			$fatal();
-		end else begin
-			$display("PASS: testsuite finished successfully");
-			$finish;
-		end
+		finished = 1;
+		$warning("FIXME: implement test_acceptance_filter()");
 	end
-
 endmodule
 

@@ -55,5 +55,5 @@ clean:
 	-rm *.vcd
 
 %_tb.test: %_tb.v %.v
-	iverilog -o $@ $^
+	iverilog -Wall -Wno-timescale -s $(patsubst %.test,%,$@) -o $@ $^
 
