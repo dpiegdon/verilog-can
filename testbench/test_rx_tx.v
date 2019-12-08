@@ -44,20 +44,21 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 	 */
 
 	`include "testbench/fixture.inc"
-	`include "testbench/tasks.inc"
+
+	localparam baudrate_prescaler = 6'h0;
+	localparam sync_jump_width = 2'h1;
+	localparam tseg1 = 4'hf;
+	localparam tseg2 = 3'h2;
+	localparam bitclocks = clocks_per_bit(baudrate_prescaler, tseg2, tseg1);
+
+	localparam triple_sampling = 0;
+	localparam extended_mode = 1;
+	localparam remote_transmission_request = 0;
 
 	integer i = 0;
 	integer countdown = 0;
 	integer dut_sender = 0;
 	integer dut_receiver = 0;
-
-	integer sync_jump_width = 2'h1;
-	integer baudrate_prescaler = 6'h3;
-	integer tseg1 = 4'hf;
-	integer tseg2 = 3'h2;
-	integer triple_sampling = 0;
-	integer extended_mode = 1;
-	integer remote_transmission_request = 0;
 
 	integer value = 0;
 	integer expect = 0;
@@ -79,7 +80,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 		end
 
 		// BRP clocks are needed before we can do work with the bus.
-		repeat (100*(baudrate_prescaler+1)) @(posedge clk);
+		repeat (8 * bitclocks) @(posedge clk);
 
 		// send from all DUTs and check that all other DUTs received.
 		for(dut_sender=1; dut_sender<=4; dut_sender=dut_sender+1) begin
@@ -96,7 +97,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 			send_frame(dut_sender, remote_transmission_request, extended_mode, tx_data_length, tx_id, tx_data);
 
 			// check device actually starts a transmit
-			countdown = 128;
+			countdown = 2 * bitclocks;
 			while((countdown!=0) && (canbus_tap_rx!=0)) begin
 				@(posedge clk);
 				countdown = countdown-1;
@@ -107,7 +108,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 			end
 
 			// check tx-complete interrupt
-			countdown = 3000*(baudrate_prescaler+1);
+			countdown = (maximum_bits_between_ack_and_interrupt + maximum_bits_per_stuffed_extended_frame) * bitclocks;
 			fork;
 				begin : timeout_check
 					repeat (countdown) @(posedge clk);

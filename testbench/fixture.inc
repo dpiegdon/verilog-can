@@ -45,6 +45,9 @@
  * and wait(start_test) in your code so the fixture is initialized properly.
  */
 
+`include "testbench/tasks.inc"
+`include "testbench/timings.inc"
+
 // to enable logging of all register accesses
 //`define LOG_REGISTER_ACCESS 1
 

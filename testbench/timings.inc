@@ -1,4 +1,4 @@
-/* vim: colorcolumn=80
+/* vim: colorcolumn=80 syntax=verilog
  *
  * This file is part of a verilog CAN controller that is SJA1000 compatible.
  *
@@ -34,35 +34,26 @@
  * a CAN protocol license from Bosch.
  */
 
-`default_nettype none
+/*
+ * This file defines timing constants.
+ *
+ * Just include this file *inside* your testbench module and add the test code.
+ */
 
-module test_acceptance_filter(output reg finished, output reg [15:0] errors);
-	/*
-	 * test acceptance filter when receiving frames.
-	 */
+// maximum frame lengths
+localparam maximum_bits_per_basic_frame = 1+11+1+2+4+8*8+15+1+2+7;
+localparam maximum_bits_per_extended_frame = 1+29+1+2+4+8*8+15+1+2+7;
+localparam maximum_bits_per_stuffed_basic_frame = maximum_bits_per_basic_frame + maximum_bits_per_basic_frame/5;
+localparam maximum_bits_per_stuffed_extended_frame = maximum_bits_per_extended_frame + maximum_bits_per_extended_frame/5;
 
-	`include "testbench/fixture.inc"
+// maximum time (in bits) between an acknowledge and the corresponding interrupt being triggered
+localparam maximum_bits_between_ack_and_interrupt = 9;
 
-	localparam baudrate_prescaler = 6'h0;
-	localparam sync_jump_width = 2'h1;
-	localparam tseg1 = 4'h0;
-	localparam tseg2 = 3'h0;
-	localparam bitclocks = clocks_per_bit(baudrate_prescaler, tseg2, tseg1);
-
-	localparam triple_sampling = 0;
-	localparam extended_mode = 1;
-	localparam remote_transmission_request = 0;
-
-	initial begin
-		errors = 0;
-		finished = 0;
-		wait(start_test);
-
-
-
-		$warning("FIXME: implement test_acceptance_filter()");
-		errors = 1;
-		finished = 1;
+// this yields the length of a single bit on the CAN bus, as
+// configured by the given parameters, in terms of a single master clocks
+function automatic [15:0] clocks_per_bit(input [5:0] baudrate_prescaler, input [2:0] tseg2, input [3:0] tseg1);
+	begin
+		clocks_per_bit = 2 * (baudrate_prescaler+1) * (1 + tseg1+1 + tseg2+1);
 	end
-endmodule
+endfunction
 

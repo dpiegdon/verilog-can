@@ -101,11 +101,13 @@ task automatic wait4irq(input integer dut);
 endtask
 
 task automatic set_timing_registers(input integer dut,
-	input [5:0] sync_jump_width, input [1:0] baudrate_prescaler,
+	input [1:0] sync_jump_width, input [5:0] baudrate_prescaler,
 	input triple_sampling, input [2:0] tseg2, input [3:0] tseg1);
 
 	begin
+		// BRT0
 		write_register(dut, 8'd6, {sync_jump_width, baudrate_prescaler});
+		// BTR1
 		write_register(dut, 8'd7, {triple_sampling, tseg2, tseg1});
 	end
 endtask
@@ -162,12 +164,22 @@ task automatic set_command_register(input integer dut, input [7:0] commands);
 	end
 endtask
 
-task automatic setup_device(input integer dut, 
-	input sync_jump_width, baudrate_prescaler,
-		triple_sampling, tseg2, tseg1,
-		extended_mode);
+task automatic setup_device_with_filters(
+	input integer dut, 
+	input [1:0] sync_jump_width,
+	input [5:0] baudrate_prescaler,
+	input triple_sampling,
+	input [2:0] tseg2,
+	input [3:0] tseg1,
+	input extended_mode,
+	input [7:0] acode0, acode1, acode2, acode3,
+	input [7:0] amask0, amask1, amask2, amask3);
+
 	reg [7:0] tmp;
 	begin
+		// force into reset mode
+		set_mode_register(dut, 0, 0, 0, 0, 1);
+
 		set_clockdivider_register(dut, extended_mode, 0, 0);
 
 		set_timing_registers(dut, sync_jump_width, baudrate_prescaler,
@@ -177,14 +189,14 @@ task automatic setup_device(input integer dut,
 		set_interrupt_enable_register(dut, 1,1,1,1,1,1,1,1);
 
 		// set acceptance filter to accept anything
-		write_register(dut, 8'd16, 8'h00); // acceptance code 0
-		write_register(dut, 8'd17, 8'h00); // acceptance code 1
-		write_register(dut, 8'd18, 8'h00); // acceptance code 2
-		write_register(dut, 8'd19, 8'h00); // acceptance code 3
-		write_register(dut, 8'd20, 8'hff); // acceptance mask 0
-		write_register(dut, 8'd21, 8'hff); // acceptance mask 1
-		write_register(dut, 8'd22, 8'hff); // acceptance mask 2
-		write_register(dut, 8'd23, 8'hff); // acceptance mask 3
+		write_register(dut, 8'd16, acode0);
+		write_register(dut, 8'd17, acode1);
+		write_register(dut, 8'd18, acode2);
+		write_register(dut, 8'd19, acode3);
+		write_register(dut, 8'd20, amask0);
+		write_register(dut, 8'd21, amask1);
+		write_register(dut, 8'd22, amask2);
+		write_register(dut, 8'd23, amask3);
 
 		// clear error counter
 		write_register(dut, 8'd14, 8'h00); // RX error counter
@@ -198,6 +210,22 @@ task automatic setup_device(input integer dut,
 
 		// leave reset mode
 		set_mode_register(dut, 0, 1, 0, 0, 0);
+	end
+endtask
+
+task automatic setup_device(
+	input integer dut, 
+	input [1:0] sync_jump_width,
+	input [5:0] baudrate_prescaler,
+	input triple_sampling,
+	input [2:0] tseg2,
+	input [3:0] tseg1,
+	input extended_mode);
+	begin
+		setup_device_with_filters(dut, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, extended_mode,
+			8'h00, 8'h00, 8'h00, 8'h00, 
+			8'hff, 8'hff, 8'hff, 8'hff);
 	end
 endtask
 
