@@ -53,12 +53,50 @@ module test_acceptance_filter(output reg finished, output reg [15:0] errors);
 	localparam extended_mode = 1;
 	localparam remote_transmission_request = 0;
 
+	reg [31:0] filter_id;
+	reg [31:0] filter_mask;
+
 	initial begin
 		errors = 0;
 		finished = 0;
 		wait(start_test);
 
+		// transmitting device
+		setup_device(1, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, 1);
 
+		// basic mode, single short filter:
+		// filter checks against id[10:3]
+		setup_device_with_filters(2, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, 0,
+			0,
+			filter_id[ : ], 8'h00, 8'h00, 8'h00,
+			filter_mask[ : ], 8'h00, 8'h00, 8'h00,
+		);
+
+		// extended mode, single long filter
+		setup_device_with_filters(3, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, 1,
+			1,
+			:
+			:
+		);
+
+		// extended mode, double short filter, first slot
+		setup_device_with_filters(4, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, 1,
+			0,
+			:
+			:
+		);
+
+		// extended mode, double short filter, second slot
+		setup_device_with_filters(5, sync_jump_width, baudrate_prescaler,
+			triple_sampling, tseg2, tseg1, 1,
+			0,
+			:
+			:
+		);
 
 		$warning("FIXME: implement test_acceptance_filter()");
 		errors = 1;

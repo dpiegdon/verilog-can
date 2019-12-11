@@ -73,7 +73,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 		errors = 0;
 		wait(start_test);
 
-		for(i=1; i<=4; i=i+1) begin
+		for(i=1; i<=5; i=i+1) begin
 			setup_device(i,
 				sync_jump_width, baudrate_prescaler,
 				triple_sampling, tseg2, tseg1, extended_mode);
@@ -83,7 +83,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 		repeat (8 * bitclocks) @(posedge clk);
 
 		// send from all DUTs and check that all other DUTs received.
-		for(dut_sender=1; dut_sender<=4; dut_sender=dut_sender+1) begin
+		for(dut_sender=1; dut_sender<=5; dut_sender=dut_sender+1) begin
 			// make sure bus is idle
 			if(1!=canbus_tap_rx) begin
 				errors += 1;
@@ -131,7 +131,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 
 			// check reception on other devices
 			repeat (100) @(posedge clk);
-			for(dut_receiver=1; dut_receiver<=4; dut_receiver=dut_receiver+1) begin
+			for(dut_receiver=1; dut_receiver<=5; dut_receiver=dut_receiver+1) begin
 				if(dut_receiver != dut_sender) begin
 					get_interrupt_register(dut_receiver, value);
 					expect = 8'h01;
@@ -141,15 +141,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 							dut_receiver, expect, value);
 					end
 
-					if(dut_receiver==1) begin
-						value = `rx_fifo_frames(dut1);
-					end else if(dut_receiver==2) begin
-						value = `rx_fifo_frames(dut2);
-					end else if(dut_receiver==3) begin
-						value = `rx_fifo_frames(dut3.can_8051);
-					end else if(dut_receiver==4) begin
-						value = `rx_fifo_frames(dut4.can_8051);
-					end
+					value = get_rx_fifo_framecount(dut_receiver);
 
 					expect = 1;
 					if(value == expect) begin
@@ -164,7 +156,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 			end
 
 			// check that interrupts have not reappeared.
-			for(i = 1; i <= 4; i=i+1) begin
+			for(i = 1; i <= 5; i=i+1) begin
 				get_interrupt_register(i, value);
 				expect = 8'h0;
 				if(value != expect) begin

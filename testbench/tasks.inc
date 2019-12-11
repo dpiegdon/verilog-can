@@ -77,6 +77,22 @@ endtask
 	(dut_interna.can_controller.i_can_bsp.i_can_fifo.wr_info_pointer - \
 		dut_interna.can_controller.i_can_bsp.i_can_fifo.rd_info_pointer)
 
+function automatic integer get_rx_fifo_framecount(input integer dut);
+	begin
+		if(dut==1) begin
+			get_rx_fifo_framecount = `rx_fifo_frames(dut1);
+		end else if(dut==2) begin
+			get_rx_fifo_framecount = `rx_fifo_frames(dut2);
+		end else if(dut==3) begin
+			get_rx_fifo_framecount = `rx_fifo_frames(dut3.can_8051);
+		end else if(dut==4) begin
+			get_rx_fifo_framecount = `rx_fifo_frames(dut4.can_8051);
+		end else if(dut==5) begin
+			get_rx_fifo_framecount = `rx_fifo_frames(dut5.can_8051);
+		end
+	end
+endfunction
+
 // Wait for interrupt on specified device. Returns immediately if IRQ active.
 task automatic wait4irq(input integer dut);
 	begin
@@ -95,6 +111,10 @@ task automatic wait4irq(input integer dut);
 		end else if(dut==4) begin
 			if(dut4_irq) begin
 				@(negedge dut4_irq);
+			end
+		end else if(dut==5) begin
+			if(dut5_irq) begin
+				@(negedge dut5_irq);
 			end
 		end
 	end
@@ -172,13 +192,14 @@ task automatic setup_device_with_filters(
 	input [2:0] tseg2,
 	input [3:0] tseg1,
 	input extended_mode,
+	input acceptance_filter_mode,
 	input [7:0] acode0, acode1, acode2, acode3,
 	input [7:0] amask0, amask1, amask2, amask3);
 
 	reg [7:0] tmp;
 	begin
 		// force into reset mode
-		set_mode_register(dut, 0, 0, 0, 0, 1);
+		set_mode_register(dut, 0, acceptance_filter_mode, 0, 0, 1);
 
 		set_clockdivider_register(dut, extended_mode, 0, 0);
 
@@ -189,14 +210,19 @@ task automatic setup_device_with_filters(
 		set_interrupt_enable_register(dut, 1,1,1,1,1,1,1,1);
 
 		// set acceptance filter to accept anything
-		write_register(dut, 8'd16, acode0);
-		write_register(dut, 8'd17, acode1);
-		write_register(dut, 8'd18, acode2);
-		write_register(dut, 8'd19, acode3);
-		write_register(dut, 8'd20, amask0);
-		write_register(dut, 8'd21, amask1);
-		write_register(dut, 8'd22, amask2);
-		write_register(dut, 8'd23, amask3);
+		if(extended_mode) begin
+			write_register(dut, 8'd16, acode0);
+			write_register(dut, 8'd17, acode1);
+			write_register(dut, 8'd18, acode2);
+			write_register(dut, 8'd19, acode3);
+			write_register(dut, 8'd20, amask0);
+			write_register(dut, 8'd21, amask1);
+			write_register(dut, 8'd22, amask2);
+			write_register(dut, 8'd23, amask3);
+		end else begin
+			write_register(dut, 8'd04, acode0);
+			write_register(dut, 8'd05, amask0);
+		end
 
 		// clear error counter
 		write_register(dut, 8'd14, 8'h00); // RX error counter
@@ -224,6 +250,7 @@ task automatic setup_device(
 	begin
 		setup_device_with_filters(dut, sync_jump_width, baudrate_prescaler,
 			triple_sampling, tseg2, tseg1, extended_mode,
+			0,
 			8'h00, 8'h00, 8'h00, 8'h00, 
 			8'hff, 8'hff, 8'hff, 8'hff);
 	end

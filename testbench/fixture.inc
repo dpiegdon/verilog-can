@@ -36,9 +36,9 @@
 
 /*
  * This file contains a basic test fixture for the can controller.
- * Four devices are connected on a can bus:
+ * Five devices are connected on a can bus:
  * two (1&2) partially share a wishbone bus,
- * and the other two (3&4) share a 8051 bus.
+ * and the other three (3&4&5) share a 8051 bus.
  * Tasks are provided to read and write registers of all of these.
  *
  * Just include this file *inside* your testbench module and add the test code
@@ -107,6 +107,7 @@ can_wishbone_top dut2(wb_clk, reset,
 // tristatable 8051 bus
 reg t8b_cs3 = 0;
 reg t8b_cs4 = 0;
+reg t8b_cs5 = 0;
 reg t8b_ale = 0;
 reg t8b_rd = 0;
 reg t8b_wr = 0;
@@ -139,6 +140,18 @@ can_8051_tristate_top dut4(reset,
 		clk,
 		dut4_rx, dut4_tx,
 		dut4_bus_off_on, dut4_irq, dut4_clkout);
+
+// can device 5
+wire dut5_rx;
+wire dut5_tx;
+wire dut5_irq;
+wire dut5_clkout;
+wire dut5_bus_off_on;
+can_8051_tristate_top dut5(reset,
+		t8b_ale, t8b_rd, t8b_wr, t8b_port, t8b_cs5,
+		clk,
+		dut5_rx, dut5_tx,
+		dut5_bus_off_on, dut5_irq, dut5_clkout);
 
 
 // bus helper tasks
@@ -239,6 +252,8 @@ task automatic read_register_t8b;
 			t8b_cs3 = 1;
 		end else if(dut == 4) begin
 			t8b_cs4 = 1;
+		end else if(dut == 5) begin
+			t8b_cs5 = 1;
 		end
 		@(negedge clk);
 		#1;
@@ -261,6 +276,8 @@ task automatic read_register_t8b;
 			t8b_cs3 = 0;
 		end else if(dut == 4) begin
 			t8b_cs4 = 0;
+		end else if(dut == 5) begin
+			t8b_cs5 = 0;
 		end
 
 		t8b_free = 1;
@@ -282,6 +299,8 @@ task automatic write_register_t8b;
 			t8b_cs3 = 1;
 		end else if(dut == 4) begin
 			t8b_cs4 = 1;
+		end else if(dut == 5) begin
+			t8b_cs5 = 1;
 		end
 		@(negedge clk);
 		#1;
@@ -303,6 +322,8 @@ task automatic write_register_t8b;
 			t8b_cs3 = 0;
 		end else if(dut == 4) begin
 			t8b_cs4 = 0;
+		end else if(dut == 5) begin
+			t8b_cs5 = 0;
 		end
 
 		t8b_free = 1;
@@ -324,7 +345,7 @@ task automatic read_register;
 	begin
 		if((dut == 1) || (dut == 2)) begin
 			read_register_wb(dut, reg_addr, reg_data);
-		end else if((dut == 3) || (dut == 4)) begin
+		end else if((dut == 3) || (dut == 4) || (dut == 5)) begin
 			read_register_t8b(dut, reg_addr, reg_data);
 		end
 
@@ -354,7 +375,7 @@ task automatic write_register;
 
 		if((dut == 1) || (dut == 2)) begin
 			write_register_wb(dut, reg_addr, reg_data);
-		end else if((dut == 3) || (dut == 4)) begin
+		end else if((dut == 3) || (dut == 4) || (dut == 5)) begin
 			write_register_t8b(dut, reg_addr, reg_data);
 		end
 	end
@@ -367,9 +388,9 @@ wire canbus_tap_rx;
 
 
 // can bus
-simulated_can_bus #(.N(5), .delay(25)) bus(
-		{ canbus_tap_tx, dut1_tx, dut2_tx, dut3_tx, dut4_tx },
-		{ canbus_tap_rx, dut1_rx, dut2_rx, dut3_rx, dut4_rx });
+simulated_can_bus #(.N(6), .delay(25)) bus(
+		{ canbus_tap_tx, dut1_tx, dut2_tx, dut3_tx, dut4_tx, dut5_tx },
+		{ canbus_tap_rx, dut1_rx, dut2_rx, dut3_rx, dut4_rx, dut5_rx });
 
 
 // test trigger

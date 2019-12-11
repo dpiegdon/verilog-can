@@ -98,7 +98,7 @@ module can_acf(
 		&	(id[10] == acceptance_code_0[7] | acceptance_mask_0[7] )
 		);
 
-// Working in extended mode. ID match for standard format (11-bit ID). Using single filter.
+	// Working in extended mode. ID match for standard format (11-bit ID). Using single filter.
 	assign match_sf_std =
 		(	(id[3]  == acceptance_code_0[0] | acceptance_mask_0[0] )
 		&	(id[4]  == acceptance_code_0[1] | acceptance_mask_0[1] )
