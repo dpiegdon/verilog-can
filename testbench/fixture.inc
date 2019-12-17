@@ -43,6 +43,10 @@
  *
  * Just include this file *inside* your testbench module and add the test code
  * and wait(start_test) in your code so the fixture is initialized properly.
+ *
+ * Also make sure your testbench supplies the following:
+ * 
+ * localparam bitclocks;	// length of a bit on the can bus, in clocks ok clk.
  */
 
 `include "testbench/tasks.inc"
@@ -55,6 +59,14 @@
 reg clk = 0;
 initial begin
 	forever #31.25 clk = ~clk;
+end
+
+// countdown for timeouts. may be used by anybody to measure timeouts.
+integer countdown = 0;
+always @(posedge clk) begin
+	if(countdown != 0) begin
+		countdown = countdown - 1;
+	end
 end
 
 // wishbone clock at 10 MHz

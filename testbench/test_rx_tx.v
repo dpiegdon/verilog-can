@@ -38,9 +38,10 @@
 
 module test_tx_rx(output reg finished, output reg [15:0] errors);
 	/*
-	 * test transmit and receive of extended-id can frames on a bus.
-	 * also tests basic data bus connectivity for both wishbone
-	 * and 8051 bus types.
+	 * primary goals:
+	 *	test transmit and receive of extended-id CAN frames on a bus.
+	 * secondary goals:
+	 *	test basic data bus connectivity for 8051 and wishbone bus.
 	 */
 
 	`include "testbench/fixture.inc"
@@ -56,7 +57,6 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 	localparam remote_transmission_request = 0;
 
 	integer i = 0;
-	integer countdown = 0;
 	integer dut_sender = 0;
 	integer dut_receiver = 0;
 
@@ -95,42 +95,10 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 			tx_data_length = 8;
 			tx_data = 64'hdead_beef_badc_0ffe+dut_sender;
 			send_frame(dut_sender, remote_transmission_request, extended_mode, tx_data_length, tx_id, tx_data);
-
-			// check device actually starts a transmit
-			countdown = 2 * bitclocks;
-			while((countdown!=0) && (canbus_tap_rx!=0)) begin
-				@(posedge clk);
-				countdown = countdown-1;
-			end
-			if(0==countdown) begin
-				errors += 1;
-				$error("DUT%d did not send data on can bus.", dut_sender);
-			end
-
-			// check tx-complete interrupt
-			countdown = (maximum_bits_between_ack_and_interrupt + maximum_bits_per_stuffed_extended_frame) * bitclocks;
-			fork;
-				begin : timeout_check
-					repeat (countdown) @(posedge clk);
-					errors += 1;
-					$error("DUT%d TX timed out", dut_sender);
-					disable tx_check;
-				end
-				begin : tx_check
-					wait4irq(dut_sender);
-					get_interrupt_register(dut_sender, value);
-					expect = 8'h02;
-					if(value != expect) begin
-						errors += 1;
-						$error("DUT%d interrupt should be 'TX complete' (0x%02X) but is 0x%02X",
-							dut_sender, expect, value);
-					end
-					disable timeout_check;
-				end
-			join
+			verify_transmit_finished(dut_sender);
 
 			// check reception on other devices
-			repeat (100) @(posedge clk);
+			repeat (20) @(posedge clk);
 			for(dut_receiver=1; dut_receiver<=5; dut_receiver=dut_receiver+1) begin
 				if(dut_receiver != dut_sender) begin
 					get_interrupt_register(dut_receiver, value);
@@ -142,7 +110,6 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 					end
 
 					value = get_rx_fifo_framecount(dut_receiver);
-
 					expect = 1;
 					if(value == expect) begin
 						receive_and_verify_frame(dut_receiver, remote_transmission_request, extended_mode, tx_id, tx_data_length, tx_data, rx_errors);
@@ -165,7 +132,7 @@ module test_tx_rx(output reg finished, output reg [15:0] errors);
 						i, expect, value);
 				end
 			end
-			repeat (100) @(posedge clk);
+			repeat (20) @(posedge clk);
 
 		end
 

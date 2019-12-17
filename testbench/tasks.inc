@@ -120,6 +120,23 @@ task automatic wait4irq(input integer dut);
 	end
 endtask
 
+// Return value of interrupt line of dut
+function automatic irqline(input integer dut);
+	begin
+		if(dut==1) begin
+			irqline = dut1_irq;
+		end else if(dut==2) begin
+			irqline = dut2_irq;
+		end else if(dut==3) begin
+			irqline = dut3_irq;
+		end else if(dut==4) begin
+			irqline = dut4_irq;
+		end else if(dut==5) begin
+			irqline = dut5_irq;
+		end
+	end
+endfunction
+
 task automatic set_timing_registers(input integer dut,
 	input [1:0] sync_jump_width, input [5:0] baudrate_prescaler,
 	input triple_sampling, input [2:0] tseg2, input [3:0] tseg1);
@@ -235,7 +252,7 @@ task automatic setup_device_with_filters(
 		get_interrupt_register(dut, tmp);
 
 		// leave reset mode
-		set_mode_register(dut, 0, 1, 0, 0, 0);
+		set_mode_register(dut, 0, acceptance_filter_mode, 0, 0, 0);
 	end
 endtask
 
@@ -302,6 +319,58 @@ task automatic send_frame(input integer dut,
 		set_command_register(dut, 8'h01); // start transmit
 	end
 endtask
+
+// verify that transmission on CAN bus has started
+// uses upstream `countdown` `bitclocks` `canbus_tap_rx`
+task automatic verify_transmit_started(dut);
+	begin
+		// check device actually starts a transmit
+		countdown = 2 * bitclocks;
+		while((countdown!=0) && (canbus_tap_rx!=0)) begin
+			@(posedge clk);
+		end
+		if(0==countdown) begin
+			errors += 1;
+			$error("DUT%d did not send data on can bus.", dut);
+		end else begin
+			countdown = 0;
+		end
+	end
+endtask
+
+// verify that transmission starts on CANbus, device triggers an interrupt,
+// and only the tx-complete interrupt is set.
+task automatic verify_transmit_finished(dut);
+	begin
+		verify_transmit_started(dut);
+
+		// check tx-complete interrupt
+		countdown = (maximum_bits_between_ack_and_interrupt + maximum_bits_per_stuffed_extended_frame) * bitclocks;
+		while((countdown != 0) && (irqline(dut_sender) != 0)) begin
+			@(posedge clk);
+		end
+		if(0 == countdown) begin
+			$error("DUT%d TX timeout", dut_sender);
+		end else begin
+			countdown = 0;
+			get_interrupt_register(dut_sender, value);
+			expect = 8'h02;
+			if(value != expect) begin
+				errors += 1;
+				$error("DUT%d interrupt should be 'TX complete' (0x%02X) but is 0x%02X",
+					dut_sender, expect, value);
+			end
+		end
+	end
+endtask
+
+
+task automatic release_receive_buffer(dut);
+	begin
+		set_command_register(dut, 8'h04);
+	end
+endtask
+
 
 task automatic receive_frame(input integer dut,
 	output remote_transmission_request,
@@ -370,7 +439,7 @@ task automatic receive_frame(input integer dut,
 			end
 		end
 
-		set_command_register(dut, 8'h04); // release receive buffer
+		release_receive_buffer(dut);
 	end
 endtask
 
