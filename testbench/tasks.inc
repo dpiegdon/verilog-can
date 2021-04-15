@@ -165,7 +165,8 @@ task automatic set_clockdivider_register(input integer dut,
 endtask
 
 task automatic set_mode_register(input integer dut,
-	input sleep, acceptance_filter, self_test, listen_only, reset);
+	input sleep, input acceptance_filter, input self_test,
+	input listen_only, input reset);
 	// (only sensible for extended mode / PeliCAN mode)
 
 	begin
@@ -177,8 +178,9 @@ task automatic set_mode_register(input integer dut,
 endtask
 
 task automatic set_interrupt_enable_register(input integer dut,
-	input bus_error, arbitration_lost, error_passive, wake_up, data_overrun,
-	error_warning, transmitted, received);
+	input bus_error, input arbitration_lost, input error_passive,
+	input wake_up, input data_overrun, input error_warning,
+	input transmitted, input received);
 
 	begin
 		write_register(dut, 8'd4, {
@@ -322,7 +324,7 @@ endtask
 
 // verify that transmission on CAN bus has started
 // uses upstream `countdown` `bitclocks` `canbus_tap_rx`
-task automatic verify_transmit_started(dut);
+task automatic verify_transmit_started(input integer dut);
 	begin
 		// check device actually starts a transmit
 		countdown = 2 * bitclocks;
@@ -340,7 +342,7 @@ endtask
 
 // verify that transmission starts on CANbus, device triggers an interrupt,
 // and only the tx-complete interrupt is set.
-task automatic verify_transmit_finished(dut);
+task automatic verify_transmit_finished(input integer dut);
 	begin
 		verify_transmit_started(dut);
 
@@ -365,7 +367,7 @@ task automatic verify_transmit_finished(dut);
 endtask
 
 
-task automatic release_receive_buffer(dut);
+task automatic release_receive_buffer(input integer dut);
 	begin
 		set_command_register(dut, 8'h04);
 	end

@@ -48,7 +48,7 @@ module test_acceptance_filter(output reg finished, output reg [15:0] errors);
 
 	`include "testbench/fixture.inc"
 
-	task automatic setup_devices(input reg [31:0] filter_id, reg [31:0] filter_mask);
+	task automatic setup_devices(input reg [31:0] filter_id, input reg [31:0] filter_mask);
 		begin
 			// transmitting device
 			setup_device(1, sync_jump_width, baudrate_prescaler,
@@ -92,7 +92,7 @@ module test_acceptance_filter(output reg finished, output reg [15:0] errors);
 		end
 	endtask
 
-	task automatic receiption_ok(dut_receiver);
+	task automatic receiption_ok(input integer dut_receiver);
 		begin
 			if(irqline(dut_receiver) != 0) begin
 				errors += 1;
