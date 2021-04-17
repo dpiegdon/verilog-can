@@ -12,6 +12,12 @@ Hopefully the project can be picked up again now.
 More information to come.
 
 
+State
+=====
+
+Currently nonfunctional.
+
+
 Authors
 =======
 
